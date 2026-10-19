@@ -1,5 +1,20 @@
 CHANGES
 =======
+Version 0.5.0 - 2026-10-19
+------------------
+The site in Spanish and Basque (Euskara), as well as English.
+
+- A language picker at the right of the navigation bar (inside the menu on
+  phones) switches every page, the ship designer and the game's HUD.
+- The first visit picks the browser's language when it is one of the three,
+  English otherwise; the choice is remembered in the browser.
+- Messages from the server (login and save errors, game errors, the default
+  guest name) come in the chosen language too. Needs ships-go-3d 0.5.0; an
+  older server answers in English.
+- New ships start with a layer named in the chosen language ("Casco",
+  "Kaskoa"); existing ships keep their layer names.
+- The designer's textures and image links from 0.4.0 are translated too.
+
 Version 0.4.1 - 2026-10-19
 ------------------
 Space dust now surrounds the ship wherever it flies. Before, the dust stayed

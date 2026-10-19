@@ -6,12 +6,11 @@ import { getProject, saveProject } from '@/api/projects'
 import { showAlert, showError } from '@/alerts'
 import { AXIS_COLORS, Editor, type GizmoMode, type PartRef } from '@/editor/Editor'
 import { History } from '@/editor/history'
+import { t } from '@/i18n'
 import {
   LIMITS,
-  PART_LABELS,
   PART_TEXTURES,
   PART_TYPES,
-  TEXTURE_LABELS,
   boundingRadius,
   cloneLayers,
   isValidTextureUrl,
@@ -89,7 +88,7 @@ onBeforeUnmount(() => {
 })
 
 onBeforeRouteLeave(() => {
-  if (dirty.value && !confirm('You have unsaved changes. Leave anyway?')) return false
+  if (dirty.value && !confirm(t.value.editor.unsavedLeave)) return false
 })
 
 function onBeforeUnload(event: BeforeUnloadEvent) {
@@ -104,13 +103,13 @@ async function load() {
     try {
       loaded = await getProject(id)
     } catch (error) {
-      showError(error, 'Could not load the ship.')
+      showError(error, t.value.editor.loadFailed)
       await router.replace('/projects')
       return
     }
   }
   Object.assign(project, { _id: loaded._id, name: loaded.name, layers: loaded.layers })
-  if (project.layers.length === 0) project.layers.push(newLayer('Hull'))
+  if (project.layers.length === 0) project.layers.push(newLayer(t.value.editor.hull))
   activeLayer.value = 0
   selected.value = null
   history.reset(project.layers)
@@ -128,7 +127,7 @@ watch(
   () => route.params.id,
   (id) => {
     if ((id || undefined) === project._id) return
-    if (dirty.value && !confirm('You have unsaved changes. Discard them?')) return
+    if (dirty.value && !confirm(t.value.editor.unsavedDiscard)) return
     void load()
   },
 )
@@ -173,7 +172,7 @@ function refresh() {
 
 function addPart(type: PartType) {
   if (partCount.value >= LIMITS.parts) {
-    showAlert('error', `A ship can't have more than ${LIMITS.parts} parts.`)
+    showAlert('error', t.value.ship.tooManyParts(LIMITS.parts))
     return
   }
   const layer = currentLayer.value
@@ -193,7 +192,7 @@ function duplicateSelected() {
   const part = selectedPart.value
   if (!ref || !part) return
   if (partCount.value >= LIMITS.parts) {
-    showAlert('error', `A ship can't have more than ${LIMITS.parts} parts.`)
+    showAlert('error', t.value.ship.tooManyParts(LIMITS.parts))
     return
   }
   const copy = clonePart(part)
@@ -283,10 +282,7 @@ function setTextureUrl(event: Event) {
   const url = input.value.trim()
   if (!part) return
   if (url && !isValidTextureUrl(url)) {
-    showAlert(
-      'error',
-      `Image links must start with https:// and be at most ${LIMITS.textureUrl} characters.`,
-    )
+    showAlert('error', t.value.editor.imageLinkRule(LIMITS.textureUrl))
     input.value = part.textureUrl ?? ''
     return
   }
@@ -350,10 +346,10 @@ function setActiveLayer(index: number) {
 
 function addLayer() {
   if (project.layers.length >= LIMITS.layers) {
-    showAlert('error', `A ship can't have more than ${LIMITS.layers} layers.`)
+    showAlert('error', t.value.ship.tooManyLayers(LIMITS.layers))
     return
   }
-  project.layers.push(newLayer(`Layer ${project.layers.length + 1}`))
+  project.layers.push(newLayer(t.value.editor.layerName(project.layers.length + 1)))
   setActiveLayer(project.layers.length - 1)
   commit()
 }
@@ -363,7 +359,7 @@ function removeLayer(index: number) {
   if (!layer || project.layers.length === 1) return
   if (
     layer.parts.length > 0 &&
-    !confirm(`Delete layer "${layer.name}" and its ${layer.parts.length} parts?`)
+    !confirm(t.value.editor.confirmDeleteLayer(layer.name, layer.parts.length))
   ) {
     return
   }
@@ -398,10 +394,10 @@ async function save() {
     project._id = saved._id
     project.name = saved.name
     savedSnapshot.value = snapshot()
-    showAlert('success', 'Ship saved.')
+    showAlert('success', t.value.editor.saved)
     if (created) await router.replace(`/editor/${saved._id}`)
   } catch (error) {
-    showError(error, 'Could not save the ship.')
+    showError(error, t.value.editor.saveFailed)
   } finally {
     saving.value = false
   }
@@ -453,31 +449,29 @@ function onKeyDown(event: KeyboardEvent) {
 <template>
   <div class="editor">
     <header class="toolbar">
-      <RouterLink class="back" to="/projects" title="My ships">←</RouterLink>
+      <RouterLink class="back" to="/projects" :title="t.editor.back">←</RouterLink>
       <input
         v-model="project.name"
         class="name"
-        placeholder="Ship name"
+        :placeholder="t.editor.shipName"
         :maxlength="LIMITS.projectName"
-        aria-label="Ship name"
+        :aria-label="t.editor.shipName"
       />
       <button class="primary" type="button" :disabled="saving || loading" @click="save">
-        {{ project._id ? 'Save' : 'Create' }}{{ dirty ? ' •' : '' }}
+        {{ project._id ? t.editor.save : t.editor.create }}{{ dirty ? ' •' : '' }}
       </button>
 
       <div class="group">
-        <button type="button" :disabled="!canUndo" title="Undo (Ctrl+Z)" @click="undo">↶</button>
-        <button type="button" :disabled="!canRedo" title="Redo (Ctrl+Shift+Z)" @click="redo">
-          ↷
-        </button>
+        <button type="button" :disabled="!canUndo" :title="t.editor.undo" @click="undo">↶</button>
+        <button type="button" :disabled="!canRedo" :title="t.editor.redo" @click="redo">↷</button>
       </div>
 
-      <div class="group" role="radiogroup" aria-label="Tool">
+      <div class="group" role="radiogroup" :aria-label="t.editor.tool">
         <button
           v-for="[value, label, key] in [
-            ['translate', 'Move', 'W'],
-            ['rotate', 'Rotate', 'E'],
-            ['scale', 'Scale', 'R'],
+            ['translate', t.editor.move, 'W'],
+            ['rotate', t.editor.rotate, 'E'],
+            ['scale', t.editor.scale, 'R'],
           ] as const"
           :key="value"
           type="button"
@@ -488,16 +482,20 @@ function onKeyDown(event: KeyboardEvent) {
           {{ label }}
         </button>
       </div>
-      <label class="check"><input v-model="snap" type="checkbox" /> Snap</label>
-      <button type="button" title="Focus (F)" @click="editor?.focus()">Focus</button>
-      <span class="count">{{ partCount }} / {{ LIMITS.parts }} parts</span>
+      <label class="check"><input v-model="snap" type="checkbox" /> {{ t.editor.snap }}</label>
+      <button type="button" :title="t.editor.focusTitle" @click="editor?.focus()">
+        {{ t.editor.focus }}
+      </button>
+      <span class="count">{{ t.editor.partCount(partCount, LIMITS.parts) }}</span>
     </header>
 
     <aside class="panel left">
       <section>
         <h3>
-          Layers
-          <button type="button" class="small" title="Add layer" @click="addLayer">+</button>
+          {{ t.editor.layers }}
+          <button type="button" class="small" :title="t.editor.addLayer" @click="addLayer">
+            +
+          </button>
         </h3>
         <ul class="list">
           <li
@@ -509,9 +507,7 @@ function onKeyDown(event: KeyboardEvent) {
             <button
               type="button"
               class="icon"
-              :title="
-                layer.visible ? 'Hide (hidden layers are not part of the ship in game)' : 'Show'
-              "
+              :title="layer.visible ? t.editor.hideLayer : t.editor.showLayer"
               @click.stop="toggleLayer(i)"
             >
               {{ layer.visible ? '👁' : '—' }}
@@ -526,7 +522,7 @@ function onKeyDown(event: KeyboardEvent) {
             <button
               type="button"
               class="icon"
-              title="Delete layer"
+              :title="t.editor.deleteLayer"
               :disabled="project.layers.length === 1"
               @click.stop="removeLayer(i)"
             >
@@ -537,16 +533,16 @@ function onKeyDown(event: KeyboardEvent) {
       </section>
 
       <section>
-        <h3>Add part</h3>
+        <h3>{{ t.editor.addPart }}</h3>
         <div class="add-grid">
           <button v-for="type in PART_TYPES" :key="type" type="button" @click="addPart(type)">
-            {{ PART_LABELS[type] }}
+            {{ t.ship.parts[type] }}
           </button>
         </div>
       </section>
 
       <section v-if="currentLayer">
-        <h3>Parts in “{{ currentLayer.name }}”</h3>
+        <h3>{{ t.editor.partsIn(currentLayer.name) }}</h3>
         <ul class="list">
           <li
             v-for="(part, i) in currentLayer.parts"
@@ -565,10 +561,10 @@ function onKeyDown(event: KeyboardEvent) {
                     : 'none',
               }"
             />
-            {{ PART_LABELS[part.type] }} {{ i + 1 }}
-            <span v-if="part.mirror" class="muted" title="Mirrored">⇋</span>
+            {{ t.ship.parts[part.type] }} {{ i + 1 }}
+            <span v-if="part.mirror" class="muted" :title="t.editor.mirrored">⇋</span>
           </li>
-          <li v-if="currentLayer.parts.length === 0" class="muted">No parts yet.</li>
+          <li v-if="currentLayer.parts.length === 0" class="muted">{{ t.editor.noParts }}</li>
         </ul>
       </section>
     </aside>
@@ -577,15 +573,15 @@ function onKeyDown(event: KeyboardEvent) {
 
     <aside class="panel right">
       <template v-if="selectedPart">
-        <h3>Part</h3>
+        <h3>{{ t.editor.part }}</h3>
         <label class="row">
-          Type
+          {{ t.editor.type }}
           <select
             :value="selectedPart.type"
             @change="setType(($event.target as HTMLSelectElement).value as PartType)"
           >
             <option v-for="type in PART_TYPES" :key="type" :value="type">
-              {{ PART_LABELS[type] }}
+              {{ t.ship.parts[type] }}
             </option>
           </select>
         </label>
@@ -598,9 +594,9 @@ function onKeyDown(event: KeyboardEvent) {
         </div>
         <div
           v-for="[field, label, step] in [
-            ['position', 'Position', 0.25],
-            ['rotation', 'Rotation °', 15],
-            ['scale', 'Size', 0.1],
+            ['position', t.editor.position, 0.25],
+            ['rotation', t.editor.rotation, 15],
+            ['scale', t.editor.size, 0.1],
           ] as const"
           :key="field"
           class="vector"
@@ -621,7 +617,7 @@ function onKeyDown(event: KeyboardEvent) {
         </div>
 
         <label class="row">
-          Color
+          {{ t.editor.color }}
           <input
             type="color"
             :value="selectedPart.color"
@@ -640,15 +636,15 @@ function onKeyDown(event: KeyboardEvent) {
           />
         </div>
 
-        <div class="row">Texture</div>
+        <div class="row">{{ t.editor.texture }}</div>
         <div class="textures">
           <button
             type="button"
             class="texture-button"
             :class="{ active: !selectedPart.texture && !selectedPart.textureUrl }"
             :style="{ backgroundColor: selectedPart.color }"
-            title="Plain"
-            aria-label="Plain"
+            :title="t.editor.plainTexture"
+            :aria-label="t.editor.plainTexture"
             @click="setTexture(undefined)"
           />
           <button
@@ -661,13 +657,13 @@ function onKeyDown(event: KeyboardEvent) {
               backgroundColor: selectedPart.color,
               backgroundImage: `url(${textureSwatches[texture]})`,
             }"
-            :title="TEXTURE_LABELS[texture]"
-            :aria-label="TEXTURE_LABELS[texture]"
+            :title="t.ship.textures[texture]"
+            :aria-label="t.ship.textures[texture]"
             @click="setTexture(texture)"
           />
         </div>
         <label class="row">
-          Image link
+          {{ t.editor.imageLink }}
           <input
             type="url"
             class="texture-url"
@@ -678,11 +674,10 @@ function onKeyDown(event: KeyboardEvent) {
           />
         </label>
         <p v-if="selectedUrlState === 'failed'" class="muted hint">
-          The image couldn't be loaded. The site may not allow other sites to use its images; the
-          part shows as plain.
+          {{ t.editor.imageFailed }}
         </p>
         <p v-else-if="selectedPart.textureUrl" class="muted hint">
-          The image is tiled and tinted by the color: pick white to show its own colors.
+          {{ t.editor.imageHint }}
         </p>
 
         <label class="row check">
@@ -691,32 +686,25 @@ function onKeyDown(event: KeyboardEvent) {
             :checked="selectedPart.mirror"
             @change="setMirror(($event.target as HTMLInputElement).checked)"
           />
-          Mirror left/right
+          {{ t.editor.mirror }}
         </label>
 
         <div class="actions">
-          <button type="button" title="Ctrl+D" @click="duplicateSelected">Duplicate</button>
+          <button type="button" title="Ctrl+D" @click="duplicateSelected">
+            {{ t.editor.duplicate }}
+          </button>
           <button type="button" class="danger" title="Delete" @click="deleteSelected">
-            Delete
+            {{ t.editor.delete }}
           </button>
         </div>
       </template>
       <template v-else>
-        <h3>No part selected</h3>
-        <p class="muted">
-          Add a part from the left, or click one in the view. Drag to orbit, right-drag to pan,
-          scroll to zoom.
-        </p>
-        <p class="muted">
-          The blue arrow is the front of the ship. The red line is the X axis, green is Y and blue
-          is Z, the same colors as the X, Y and Z fields.
-        </p>
+        <h3>{{ t.editor.noSelection }}</h3>
+        <p class="muted">{{ t.editor.noSelectionHelp }}</p>
+        <p class="muted">{{ t.editor.axesHelp }}</p>
       </template>
 
-      <p class="muted size">
-        Ship radius: {{ radius.toFixed(1) }}. Every ship is scaled to the same size in game, so only
-        the shape matters.
-      </p>
+      <p class="muted size">{{ t.editor.radius(radius.toFixed(1)) }}</p>
     </aside>
   </div>
 </template>

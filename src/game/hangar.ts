@@ -48,6 +48,12 @@ const BEAM_SWAY_SPEED = 0.5
 /** Turns a second of the ship on its platform. */
 const TURNS_PER_SECOND = 0.12
 const STARS = 600
+/** Where the camera looks at the platform from, and how fast it drifts with only space to show. */
+const CAMERA_DISTANCE = 36
+const CAMERA_HEIGHT = 12
+/** The narrowest screen, width over height, that sees the platform whole from CAMERA_DISTANCE. */
+const NARROWEST_FITTING_ASPECT = 1.3
+const DRIFT_TURNS_PER_SECOND = 0.01
 const STAR_RADIUS = 150
 
 /** The hangar's scene, drawn on a canvas of its own. */
@@ -57,10 +63,13 @@ export class Hangar {
   private readonly scene = new Scene()
   private readonly camera = new PerspectiveCamera(40, 1, 0.5, 600)
   private readonly turntable = new Group()
+  /** The platform, its lamps and beams, and the ship: hidden while only space shows. */
+  private readonly stage = new Group()
   private readonly beams: Array<{ mesh: Mesh; outward: number; phase: number }> = []
   private readonly disposables: Array<BufferGeometry | Material> = []
   private ship: Group | null = null
   private frame = 0
+  private distance = CAMERA_DISTANCE
   private readonly started = performance.now()
 
   constructor() {
@@ -72,9 +81,8 @@ export class Hangar {
     const sun = new DirectionalLight(0xfff2dd, 2.2)
     sun.position.set(4, 6, -3)
     this.scene.add(sun)
-    this.camera.position.set(0, 9, -26)
-    this.camera.lookAt(0, 0, 0)
-    this.scene.add(this.stars(), this.planet(), this.platform(), this.turntable)
+    this.stage.add(this.platform(), this.turntable)
+    this.scene.add(this.stars(), this.planet(), this.stage)
     this.addSpotlights()
     this.frame = requestAnimationFrame(this.draw)
   }
@@ -97,11 +105,18 @@ export class Hangar {
     this.turntable.add(holder)
   }
 
+  /** Shows the platform and its ship, or only space, the camera drifting slowly round it. */
+  setPlatform(visible: boolean): void {
+    this.stage.visible = visible
+  }
+
   /** Fits the drawing to its canvas's size on the page. */
   resize(width: number, height: number): void {
     this.renderer.setSize(width, height, false)
     this.camera.aspect = width / Math.max(height, 1)
     this.camera.updateProjectionMatrix()
+    // A narrow screen (a phone held upright) sees less across: the camera stands back to fit the platform.
+    this.distance = CAMERA_DISTANCE * Math.max(1, NARROWEST_FITTING_ASPECT / this.camera.aspect)
   }
 
   dispose(): void {
@@ -116,6 +131,15 @@ export class Hangar {
   private draw = (time: number): void => {
     const seconds = (time - this.started) / 1000
     this.turntable.rotation.y = seconds * TURNS_PER_SECOND * 2 * Math.PI
+    // With only space to show, the camera drifts round, looking out.
+    const drift = this.stage.visible ? 0 : seconds * DRIFT_TURNS_PER_SECOND * 2 * Math.PI
+    const height = (CAMERA_HEIGHT * this.distance) / CAMERA_DISTANCE
+    this.camera.position.set(
+      this.distance * Math.sin(drift),
+      height,
+      -this.distance * Math.cos(drift),
+    )
+    this.camera.lookAt(0, 0, 0)
     for (const beam of this.beams) {
       beam.mesh.rotation.z =
         -beam.outward * (BEAM_LEAN + BEAM_SWAY * Math.sin(seconds * BEAM_SWAY_SPEED + beam.phase))
@@ -179,7 +203,7 @@ export class Hangar {
       bulb.position.set(x, PLATFORM_TOP + 0.2, z)
       const beam = new Mesh(beamGeometry, beamMaterial)
       beam.position.set(x, PLATFORM_TOP, z)
-      this.scene.add(bulb, beam)
+      this.stage.add(bulb, beam)
       this.beams.push({ mesh: beam, outward: Math.sign(x), phase: index * 1.7 })
     }
   }

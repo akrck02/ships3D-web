@@ -21,6 +21,17 @@ the same game.
 - The hangar: on the Play page your ship turns on a platform floating in
   space, lit by sweeping spotlights. The arrows, the arrow keys or a swipe go
   through the ships, Enter launches. The lists of ships stay below it.
+- The 3DS's pixel-art look across the site: pixel fonts (VT323, Silkscreen,
+  Press Start 2P, under the OFL, served with the site), windows of night-blue
+  glass with a light edge and a hard shadow, a sky-blue accent.
+- Playing feels like the 3DS game: the Play page fills the screen with live
+  space and pixel-art windows. Choose the mode (big icons, the arrow keys and
+  Enter, or a click), then the ship in the hangar, then launch. Settings
+  (volumes, and steering on a phone) are behind the gear.
+- In the game, life is the 3DS's bar at the top left: a heart and ten charges,
+  red and beating when low. Escape, P or the pause button opens the pause
+  menu: Resume, the volumes, and Leave (which moved there). The ship flies on
+  straight and holds its fire while it is open.
 - In English, Spanish and Basque.
 
 Version 0.6.0 - 2026-10-19

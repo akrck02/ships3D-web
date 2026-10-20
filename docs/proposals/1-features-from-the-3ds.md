@@ -75,10 +75,10 @@ languages.
 - [x] T14 — the pages in the new look: the navigation, the Play page and its hangar, login and registration, my ships, the profile, alerts · `src/views/*`, `src/components/*` · R10 · seen on a computer and a phone
 - [x] T15 — the game's HUD in pixel art: life as charges with a heart, the speed, the scoreboard, the death and round windows, the copilot's box · `src/game/hud.ts`, `src/game/game.css` · R10 · seen in the game
 
-- [ ] T16 — the space behind the Play page, live: the hangar's scene full screen, its platform shown only when choosing a ship · `game/hangar.ts`, `views/GameView.vue` · R11 · seen
-- [ ] T17 — choosing the mode: a pixel window with a big icon for each mode, the cursor star, the arrow keys and Enter · `views/GameView.vue`, `components/PixelIcon.vue` · R11, R8 · seen, by keyboard too
-- [ ] T18 — choosing the ship: the hangar full screen, the name at the top, the arrows at the sides, a window below with the name to fly under and Launch; Settings (volumes, steering on a phone) in a window of its own · `views/GameView.vue`, `components/ShipHangar.vue` · R11, R8 · seen on a computer and a phone
-- [ ] T19 — the pause menu: Escape, P or a button opens it; the ship flies on straight and doesn't fire meanwhile; Resume, Settings and Leave · `game/Game.ts`, `game/hud.ts`, `game/game.css` · R11, R8 · seen
+- [x] T16 — the space behind the Play page, live: the hangar's scene full screen, its platform shown only when choosing a ship · `game/hangar.ts`, `views/GameView.vue` · R11 · seen
+- [x] T17 — choosing the mode: a pixel window with a big icon for each mode, the cursor star, the arrow keys and Enter · `views/GameView.vue`, `components/PixelIcon.vue` · R11, R8 · seen, by keyboard too
+- [x] T18 — choosing the ship: the hangar full screen, the name at the top, the arrows at the sides, a window below with the name to fly under and Launch; Settings (volumes, steering on a phone) in a window of its own · `views/GameView.vue`, `components/ShipHangar.vue` · R11, R8 · seen on a computer and a phone
+- [x] T19 — the pause menu: Escape, P or a button opens it; the ship flies on straight and doesn't fire meanwhile; Resume, Settings and Leave · `game/Game.ts`, `game/hud.ts`, `game/game.css` · R11, R8 · seen
 
 ## Result
 

@@ -11,12 +11,13 @@ import {
 
 import { t } from '@/i18n'
 import { buildShip } from '@/shared/shipMesh'
+import { Autopilot } from './autopilot'
+import { edgeNearness } from './edge'
 import { Effects } from './effects'
 import { FORWARD, UP, segmentHitsSphere, stepFlight, velocityOf, type FlightState } from './flight'
+import { ForceField } from './forceField'
 import { Hud, type Marker, type ScoreRow } from './hud'
 import { Hull } from './hull'
-import { edgeNearness } from './edge'
-import { ForceField } from './forceField'
 import { CombinedInput, KeyboardMouseInput, type InputSource, type InputState } from './input'
 import { Connection } from './net'
 import {
@@ -139,6 +140,7 @@ export class Game {
   private readonly resizeObserver: ResizeObserver
   private world: World | null = null
   private forceField: ForceField | null = null
+  private readonly autopilot = new Autopilot()
   private readonly radar = new Radar()
 
   private settings: Settings | null = null
@@ -517,6 +519,7 @@ export class Game {
       this.flight.quaternion.fromArray(q)
       this.flight.speed = 0
       this.alive = true
+      this.autopilot.steering = false
       this.me.group.visible = true
       this.placeCameraBehind()
       this.hud.hideDeath()
@@ -636,11 +639,19 @@ export class Game {
           Math.min(1, gap / (settings.acceleration * SPEED_TARGET_RESPONSE)),
         )
       }
-      stepFlight(this.flight, input, settings, dt)
+      // Too near the edge and heading out, the copilot takes the helm (and the guns).
+      const controls = this.autopilot.controls(
+        input,
+        this.flight,
+        settings.worldRadius,
+        settings.maxSpeed,
+      )
+      stepFlight(this.flight, controls, settings, dt)
       me.group.position.copy(this.flight.position)
       me.group.quaternion.copy(this.flight.quaternion)
       this.checkCrash(now, settings)
-      if (input.fire && now - this.lastFire >= settings.fireCooldownMs) this.fire(now, settings)
+      if (input.fire && !this.autopilot.steering && now - this.lastFire >= settings.fireCooldownMs)
+        this.fire(now, settings)
       if (now - this.lastStateSent >= 1000 / settings.tickRate) this.sendState(now)
     } else {
       const left = (this.diedAt + settings.respawnDelayMs - now) / 1000

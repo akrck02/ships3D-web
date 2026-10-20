@@ -232,7 +232,8 @@ const eu: Messages = {
 
   game: {
     leave: 'Irten',
-    leavingZone: 'Borroka-eremutik irteten ari zara',
+    copilotLeaving: 'Borroka-arenatik irteten ari gara, jauna!',
+    copilotTakingHelm: 'Lema hartzen dut, jauna. Arenara itzuliko gara!',
     hint: 'Egin klik saguarekin gidatzeko · W/S azeleratu · A/D albo-biraketa · geziak biratu · Zuriunea tiro · Tab markagailua · +/- radarraren irismena',
     touchHint:
       'Ezkerrean: azeleragailua · joysticka edo okertu gidatzeko · ⟲ ⟳ albo-biraketa · SU · ukitu radarra irismena aldatzeko',

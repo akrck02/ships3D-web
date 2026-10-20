@@ -230,7 +230,8 @@ const en = {
 
   game: {
     leave: 'Leave',
-    leavingZone: 'Leaving the battle zone',
+    copilotLeaving: "We're leaving the combat arena, sir!",
+    copilotTakingHelm: 'Taking the helm, sir. Back to the arena!',
     hint: 'Click to steer with the mouse · W/S throttle · A/D roll · arrows turn · Space fire · Tab scores · +/- radar range',
     touchHint:
       'Left: throttle · stick or tilt to steer · ⟲ ⟳ roll · FIRE · tap the radar to change its range',

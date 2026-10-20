@@ -232,7 +232,8 @@ const es: Messages = {
 
   game: {
     leave: 'Salir',
-    leavingZone: 'Estás saliendo de la zona de batalla',
+    copilotLeaving: '¡Nos estamos saliendo de la arena de combate, señor!',
+    copilotTakingHelm: 'Tomo el mando, señor. ¡De vuelta a la arena!',
     hint: 'Haz clic para dirigir con el ratón · W/S acelerar · A/D alabeo · flechas girar · Espacio disparar · Tab marcador · +/- alcance del radar',
     touchHint:
       'Izquierda: acelerador · joystick o inclinación para dirigir · ⟲ ⟳ alabeo · DISPARAR · toca el radar para cambiar su alcance',

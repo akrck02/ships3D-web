@@ -94,8 +94,7 @@
   border-radius: 50%;
 }
 
-.hud-status,
-.hud-warning {
+.hud-status {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -107,9 +106,46 @@
   top: 35%;
   font-size: 1.3rem;
 }
-.hud-warning {
-  top: 22%;
-  color: #ffd54f;
+.hud-copilot {
+  position: absolute;
+  left: 50%;
+  bottom: max(3.2rem, calc(env(safe-area-inset-bottom) + 2.4rem));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: min(32rem, calc(100% - 2rem));
+  padding: 0.5rem 1rem 0.5rem 0.6rem;
+  border: 2px solid #9cc8f2;
+  border-radius: 14px;
+  background: rgb(14 28 66 / 0.85);
+  color: #eaf4ff;
+  animation: hud-copilot-in 0.25s ease-out;
+}
+.hud-copilot-face {
+  flex: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  animation: hud-copilot-bob 1.4s ease-in-out infinite;
+}
+.hud-copilot-light {
+  animation: hud-copilot-blink 0.8s steps(2) infinite;
+}
+@keyframes hud-copilot-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.6rem);
+  }
+}
+@keyframes hud-copilot-bob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes hud-copilot-blink {
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .hud-hint {

@@ -71,6 +71,8 @@ const CAMERA_POSITION_SMOOTHING = 6
 const CAMERA_ROTATION_SMOOTHING = 8
 /** How much farther back the camera sits at the world's edge, in its usual distances. */
 const CAMERA_EDGE_PULL_BACK = 1.6
+/** How near the edge the copilot warns that we're leaving the arena. */
+const COPILOT_WARNS_AT = 0.35
 /** Gap, in CSS pixels, between the radar and the edges of the screen. */
 const RADAR_MARGIN = 16
 /**
@@ -669,7 +671,7 @@ export class Game {
     this.forceField?.update(this.flight.position)
 
     this.hud.setSpeed(this.flight.speed)
-    this.hud.setBoundaryWarning(this.flight.position.length() > settings.worldRadius * 0.92)
+    this.hud.setCopilot(this.copilotWords(settings))
     this.hud.setMarkers(this.markers())
     this.radar.update(this.flight.position, this.flight.quaternion, this.contacts())
     const scores = input.scoreboard || !this.alive || this.result !== null
@@ -869,6 +871,20 @@ export class Game {
       this.cameraQuaternion,
       1 - Math.exp(-CAMERA_ROTATION_SMOOTHING * dt),
     )
+  }
+
+  /** What the copilot says now: it warns near the edge, and says so while it has the helm. */
+  private copilotWords(settings: Settings): string | null {
+    if (!this.alive || this.seat) {
+      return null
+    }
+    if (this.autopilot.steering) {
+      return t.value.game.copilotTakingHelm
+    }
+    if (edgeNearness(this.flight.position, settings.worldRadius) >= COPILOT_WARNS_AT) {
+      return t.value.game.copilotLeaving
+    }
+    return null
   }
 
   private placeCameraBehind(): void {

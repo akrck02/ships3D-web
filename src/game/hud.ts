@@ -1,5 +1,6 @@
 import { t } from '@/i18n'
 
+import { Copilot } from './copilot'
 import './game.css'
 
 export interface HudActions {
@@ -55,7 +56,7 @@ export class Hud {
   private readonly lifeFill: HTMLDivElement
   private readonly speedText: HTMLSpanElement
   private readonly status: HTMLDivElement
-  private readonly warning: HTMLDivElement
+  private readonly copilot: Copilot
   private readonly feed: HTMLDivElement
   private readonly scoreboard: HTMLDivElement
   private readonly scoreBody: HTMLTableSectionElement
@@ -113,8 +114,7 @@ export class Hud {
     el('div', 'hud-crosshair', this.root)
 
     this.status = el('div', 'hud-status', this.root)
-    this.warning = el('div', 'hud-warning', this.root)
-    this.warning.textContent = text.leavingZone
+    this.copilot = new Copilot(this.root)
 
     this.hint = el('div', 'hud-hint', this.root)
     this.hint.textContent = text.hint
@@ -152,7 +152,6 @@ export class Hud {
     this.resultText = el('p', '', this.result)
     this.resultReturn = el('p', 'hud-result-return', this.result)
 
-    this.warning.hidden = true
     this.scoreboard.hidden = true
     this.death.hidden = true
     this.round.hidden = true
@@ -177,8 +176,9 @@ export class Hud {
     this.status.hidden = text === null
   }
 
-  setBoundaryWarning(visible: boolean): void {
-    this.warning.hidden = !visible
+  /** The copilot's words, or null for silence. */
+  setCopilot(words: string | null): void {
+    this.copilot.say(words)
   }
 
   setHint(text: string): void {

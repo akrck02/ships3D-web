@@ -78,6 +78,8 @@ const COPILOT_WARNS_AT = 0.35
 const EDGE_TOUCH_SHARE = 0.9995
 /** How much a hit shakes the camera, as a share of a crash's shake. */
 const HIT_SHAKE_SHARE = 0.45
+/** The sparks of a crash into the edge: the force field's blue. */
+const EDGE_SPARK_COLOUR = 0x8fe3ff
 /** Gap, in CSS pixels, between the radar and the edges of the screen. */
 const RADAR_MARGIN = 16
 /**
@@ -681,6 +683,7 @@ export class Game {
     this.camera.updateMatrixWorld()
     this.world?.update(this.camera.position)
     this.forceField?.update(this.flight.position)
+    this.forceField?.showCrash(now / 1000)
 
     this.hud.setSpeed(this.flight.speed)
     this.hud.setCopilot(this.copilotWords(settings))
@@ -909,6 +912,10 @@ export class Game {
     const touching = this.flight.position.length() >= settings.worldRadius * EDGE_TOUCH_SHARE
     if (touching && !this.touchingEdge) {
       this.edgeHitAt = now / 1000
+      this.forceField?.crash(this.flight.position, this.edgeHitAt)
+      if (!document.hidden) {
+        this.effects.explosion(this.flight.position, settings.shipRadius * 1.5, EDGE_SPARK_COLOUR)
+      }
     }
     this.touchingEdge = touching
   }

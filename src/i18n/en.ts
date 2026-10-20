@@ -203,6 +203,8 @@ const en = {
 
   play: {
     backToSite: 'Back to the site',
+    titleCaption: 'a space dogfight',
+    titlePrompt: 'CLICK OR PRESS ENTER',
     backToModes: 'Back to the modes',
     settings: 'Settings',
     modeHints: '← → CHOOSE   ENTER OK',

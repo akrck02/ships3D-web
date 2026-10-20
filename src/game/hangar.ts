@@ -48,6 +48,14 @@ const BEAM_SWAY_SPEED = 0.5
 /** Turns a second of the ship on its platform. */
 const TURNS_PER_SECOND = 0.12
 const STARS = 600
+/** The title's ship: how often it crosses, how far ahead of the camera, how wide, how low, how big. */
+const FLYBY_SECONDS = 7
+const FLYBY_DISTANCE = 60
+const FLYBY_CROSSING = 110
+const FLYBY_HEIGHT = -6
+const FLYBY_RADIUS = 6
+const ahead = new Vector3()
+const right = new Vector3()
 /** Where the camera looks at the platform from, and how fast it drifts with only space to show. */
 const CAMERA_DISTANCE = 36
 const CAMERA_HEIGHT = 12
@@ -68,6 +76,8 @@ export class Hangar {
   private readonly beams: Array<{ mesh: Mesh; outward: number; phase: number }> = []
   private readonly disposables: Array<BufferGeometry | Material> = []
   private ship: Group | null = null
+  /** The title's ship, crossing the screen ahead of the camera; null when not on the title. */
+  private flyer: Group | null = null
   private frame = 0
   private distance = CAMERA_DISTANCE
   private readonly started = performance.now()
@@ -92,6 +102,12 @@ export class Hangar {
     if (this.ship) {
       this.turntable.remove(this.ship)
     }
+    this.ship = this.fitted(layers, SHIP_RADIUS)
+    this.turntable.add(this.ship)
+  }
+
+  /** A ship's design built and scaled to a radius, centred on its holder. */
+  private fitted(layers: Layer[], radius: number): Group {
     const ship = buildShip(layers)
     const bounds = new Box3().setFromObject(ship)
     const sphere = bounds.isEmpty()
@@ -100,9 +116,24 @@ export class Hangar {
     ship.position.copy(sphere.center).negate()
     const holder = new Group()
     holder.add(ship)
-    holder.scale.setScalar(SHIP_RADIUS / Math.max(sphere.radius, 0.1))
-    this.ship = holder
-    this.turntable.add(holder)
+    holder.scale.setScalar(radius / Math.max(sphere.radius, 0.1))
+    return holder
+  }
+
+  /**
+   * Flies a ship across the screen ahead of the camera, rolling as it goes,
+   * as the 3DS's title does; null stops it.
+   */
+  setFlyby(layers: Layer[] | null): void {
+    if (this.flyer) {
+      this.scene.remove(this.flyer)
+      this.flyer = null
+    }
+    if (!layers) {
+      return
+    }
+    this.flyer = this.fitted(layers, FLYBY_RADIUS)
+    this.scene.add(this.flyer)
   }
 
   /** Shows the platform and its ship, or only space, the camera drifting slowly round it. */
@@ -140,12 +171,31 @@ export class Hangar {
       -this.distance * Math.cos(drift),
     )
     this.camera.lookAt(0, 0, 0)
+    this.flyBy(seconds)
     for (const beam of this.beams) {
       beam.mesh.rotation.z =
         -beam.outward * (BEAM_LEAN + BEAM_SWAY * Math.sin(seconds * BEAM_SWAY_SPEED + beam.phase))
     }
     this.renderer.render(this.scene, this.camera)
     this.frame = requestAnimationFrame(this.draw)
+  }
+
+  /** Moves the title's ship along its crossing: once every FLYBY_SECONDS, left to right, rolling once. */
+  private flyBy(seconds: number): void {
+    if (!this.flyer) {
+      return
+    }
+    const share = (seconds % FLYBY_SECONDS) / FLYBY_SECONDS
+    this.camera.getWorldDirection(ahead)
+    right.crossVectors(ahead, this.camera.up).normalize()
+    this.flyer.position
+      .copy(this.camera.position)
+      .addScaledVector(ahead, FLYBY_DISTANCE)
+      .addScaledVector(right, FLYBY_CROSSING * (share - 0.5))
+      .addScaledVector(this.camera.up, FLYBY_HEIGHT + 3 * Math.sin(share * 2 * Math.PI))
+    // Nose along the crossing, rolling once on the way.
+    this.flyer.lookAt(this.flyer.position.clone().add(right))
+    this.flyer.rotateZ(share * 2 * Math.PI)
   }
 
   private platform(): Group {

@@ -1,6 +1,6 @@
 # 1. What the 3DS version has, in the browser
 
-> Status: building · Author's approval: proposal ☑ plan ☑
+> Status: done · Author's approval: proposal ☑ plan ☑
 
 ## Why
 
@@ -23,6 +23,7 @@ the same game.
 | R8 | Everything in English, Spanish and Basque, as the rest of the site | The three languages checked |
 | R10 | **The pixel-art look** of the 3DS's menus, asked for by Jon: pixel fonts (VT323, Silkscreen, Press Start 2P, under the OFL), the night-blue glass windows with stepped corners and a hard shadow, the sky-blue accent, a star for what is chosen, and the HUD's life as charges with a heart. Across the site and the game's HUD; the ship designer takes the fonts and colours but keeps its controls' sizes | Seen on every page and in the game, on a computer and a phone; keyboard focus still visible; contrast 4.5:1 |
 | R11 | **Playing feels like the 3DS game**, as the author asked: the Play page is a full screen of live 3D space, with pixel-art windows and icons over it; you choose the mode, then the ship in the hangar, then play, with life at the top left and a pause menu (Resume, Settings, Leave) on Escape, P or a button | Played on a computer and a phone, by keyboard alone too |
+| R12 | **The rest of the 3DS's experience**, found when comparing the two clients again: the title screen with a ship crossing it, blasts that throw debris, sparks when crashing into the edge, fine aim and up-raises-the-nose in the settings, and our kills and deaths in the pause menu | Seen; test: `the handling` |
 | R9 | No new dependencies, and the game's frame rate on a phone stays where it is | `package.json` unchanged; the frame time compared before and after on a phone |
 
 ## Out of scope
@@ -80,23 +81,21 @@ languages.
 - [x] T18 — choosing the ship: the hangar full screen, the name at the top, the arrows at the sides, a window below with the name to fly under and Launch; Settings (volumes, steering on a phone) in a window of its own · `views/GameView.vue`, `components/ShipHangar.vue` · R11, R8 · seen on a computer and a phone
 - [x] T19 — the pause menu: Escape, P or a button opens it; the ship flies on straight and doesn't fire meanwhile; Resume, Settings and Leave · `game/Game.ts`, `game/hud.ts`, `game/game.css` · R11, R8 · seen
 
+- [x] T20 — the title screen, the debris and sparks, fine aim and which way is up, kills and deaths in the pause menu · `views/GameView.vue`, `game/hangar.ts`, `game/effects.ts`, `game/handling.ts`, `game/hud.ts` · R12 · test: `the handling`; seen
+
 ## Result
 
-Built, on the branch `feature/from-the-3ds`, one commit a task: the force field, the camera drawing
-back, the autopilot and the copilot, the shake, the crash into the edge, the hit flash, the sound
-(effects, music, engine) with its volumes, and the hangar. Tests for the edge's nearness and
-nearest face, the autopilot, the impacts' timing, every sound and the engine; the type check,
-eslint, prettier and all 111 tests pass. No new dependencies.
+Built on `feature/from-the-3ds`, a commit a task. The Play page is now the 3DS's flow over live
+space: the title with a ship crossing it, the mode, the ship in the hangar, then the game, with the
+3DS's life bar, a pause menu, the force field, the copilot and its autopilot, the shake, the
+crash's flash, wave and sparks, blasts with debris, the hit flash, chiptune sound and the engine,
+and the 3DS's handling settings. The site has the pixel-art look. Type check, eslint, prettier
+and 117 tests pass; no new dependencies. Screenshots are in `docs/images/`.
 
-Seen in a headless Chromium against a local ships3D-api with the free-for-all mode: the force
-field filling in, the camera drawing back, the copilot's warning and its taking the helm, the
-autopilot turning the ship back, the hangar on a computer's width and a phone's, the volume
-sliders, no errors in the console.
+Seen in a headless Chromium against a local ships3D-api: every step of the Play page, on a
+computer's width and a phone's, by keyboard; the game, the pause menu, the force field, the
+copilot taking the helm and a crash into the edge (its wave and sparks).
 
-Not checked yet, and for a person to try:
-
-- The sounds themselves: the headless browser has no speakers.
-- The crash into the edge's flash, wave and sparks: in the test flights the autopilot turned the
-  ship back before it touched the edge, as it should; a crash needs flying in at speed.
-- The hit flash and shake: there was nobody to shoot at the test ship.
-- T12's frame time on a real phone, before and after (R9).
+For a person to try: the sounds (no speakers in the test browser), the hit flash and blasts
+(nobody to shoot at), the pages behind a login (my ships, the designer) in the new look, and
+T12's frame time on a real phone (R9).

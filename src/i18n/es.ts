@@ -204,6 +204,8 @@ const es: Messages = {
 
   play: {
     backToSite: 'Volver al sitio',
+    titleCaption: 'combate en el espacio',
+    titlePrompt: 'HAZ CLIC O PULSA INTRO',
     backToModes: 'Volver a los modos',
     settings: 'Ajustes',
     modeHints: '← → ELEGIR   INTRO ACEPTAR',

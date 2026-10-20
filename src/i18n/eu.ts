@@ -204,6 +204,8 @@ const eu: Messages = {
 
   play: {
     backToSite: 'Gunera itzuli',
+    titleCaption: 'borroka espazioan',
+    titlePrompt: 'EGIN KLIK EDO SAKATU SARTU',
     backToModes: 'Moduetara itzuli',
     settings: 'Ezarpenak',
     modeHints: '← → AUKERATU   SARTU ONARTU',

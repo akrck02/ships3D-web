@@ -37,7 +37,7 @@ const selectedId = ref('')
 const guestName = ref(readStorage(GUEST_NAME_KEY) ?? '')
 const playing = ref(false)
 /** Where the Play page is: choosing the mode, then the ship. */
-const step = ref<'mode' | 'ship'>('mode')
+const step = ref<'title' | 'mode' | 'ship'>('title')
 const settingsOpen = ref(false)
 const space = ref<HTMLElement | null>(null)
 let hangar: Hangar | null = null
@@ -94,12 +94,25 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
 })
 
-watch([currentShip, step], ([ship, where]) => {
+watch([currentShip, step, defaults], ([ship, where]) => {
   hangar?.setPlatform(where === 'ship')
+  hangar?.setFlyby(where === 'title' ? titleShip() : null)
   if (ship) {
     hangar?.show(ship.layers)
   }
 })
+
+/** The ship that crosses the title: the Kestrel, as on the 3DS, or the first built-in one. */
+function titleShip() {
+  const ships = defaults.value
+  return (ships.find((ship) => ship.id === 'default:kestrel') ?? ships[0])?.layers ?? null
+}
+
+function leaveTitle() {
+  sound.unlock()
+  sound.play('choose')
+  step.value = 'mode'
+}
 
 /** The live space behind the page: the hangar's scene, its platform shown when choosing a ship. */
 function openSpace() {
@@ -108,6 +121,7 @@ function openSpace() {
   }
   hangar = new Hangar()
   hangar.setPlatform(step.value === 'ship')
+  hangar.setFlyby(step.value === 'title' ? titleShip() : null)
   if (currentShip.value) {
     hangar.show(currentShip.value.layers)
   }
@@ -163,7 +177,19 @@ function onKey(event: KeyboardEvent) {
       : event.key === 'ArrowRight' || event.key === 'ArrowDown'
         ? 1
         : 0
+  if (step.value === 'title') {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      leaveTitle()
+    }
+    return
+  }
   if (step.value === 'mode') {
+    if (event.key === 'Escape') {
+      step.value = 'title'
+      sound.play('back')
+      return
+    }
     if (horizontal !== 0) {
       event.preventDefault()
       mode.value = mode.value === 'free' ? 'assault' : 'free'
@@ -313,7 +339,13 @@ function writeStorage(key: string, value: string) {
       </button>
     </header>
 
-    <section v-if="step === 'mode'" class="window choose-mode" :aria-label="t.play.mode">
+    <button v-if="step === 'title'" type="button" class="title-screen" @click="leaveTitle">
+      <span class="title-name">Ships <span>3D</span></span>
+      <span class="title-caption">{{ t.play.titleCaption }}</span>
+      <span class="title-prompt">{{ t.play.titlePrompt }}</span>
+    </button>
+
+    <section v-else-if="step === 'mode'" class="window choose-mode" :aria-label="t.play.mode">
       <h2 class="ribbon">{{ t.play.mode }}</h2>
       <div class="modes" role="radiogroup">
         <button
@@ -500,6 +532,47 @@ function writeStorage(key: string, value: string) {
   position: absolute;
   padding: 1rem;
 }
+/* The title, as the 3DS opens: the name large over space, a ship crossing, a prompt that blinks. */
+.title-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  border: none;
+  background: none;
+  box-shadow: none;
+  font-family: var(--text-font);
+}
+.title-screen:active {
+  transform: none;
+}
+.title-name {
+  font-family: var(--heading-font);
+  font-size: clamp(2.6rem, 10vw, 6rem);
+  letter-spacing: 0.08em;
+  text-shadow: 6px 6px 0 var(--shadow);
+}
+.title-name span {
+  color: var(--accent);
+}
+.title-caption {
+  color: var(--muted);
+  font-size: 1.3rem;
+}
+.title-prompt {
+  margin-top: 3rem;
+  font-family: var(--label-font);
+  font-size: 0.85rem;
+  animation: blink 1.2s steps(1) infinite;
+}
+@keyframes blink {
+  60% {
+    opacity: 0;
+  }
+}
 .choose-mode {
   left: 50%;
   top: 50%;
@@ -663,6 +736,7 @@ function writeStorage(key: string, value: string) {
   color: var(--accent);
 }
 @media (prefers-reduced-motion: reduce) {
+  .title-prompt,
   .cursor {
     animation: none;
   }

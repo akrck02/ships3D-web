@@ -28,6 +28,12 @@ the same game.
   space and pixel-art windows. Choose the mode (big icons, the arrow keys and
   Enter, or a click), then the ship in the hangar, then launch. Settings
   (volumes, and steering on a phone) are behind the gear.
+- A title screen first, as on the 3DS: the name large over space, a ship
+  crossing it with a barrel roll, and a blinking prompt.
+- Blasts throw tumbling debris; a crash into the edge throws blue sparks.
+- Settings, and the pause menu, add the 3DS's handling: fine aim (the stick
+  softer near its centre) and whether up raises the nose. The pause menu also
+  shows your kills and deaths.
 - In the game, life is the 3DS's bar at the top left: a heart and ten charges,
   red and beating when low. Escape, P or the pause button opens the pause
   menu: Resume, the volumes, and Leave (which moved there). The ship flies on

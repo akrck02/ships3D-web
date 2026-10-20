@@ -1,6 +1,6 @@
 # 1. What the 3DS version has, in the browser
 
-> Status: proposed · Author's approval: proposal ☐ plan ☐
+> Status: planned · Author's approval: proposal ☑ plan ☐
 
 ## Why
 
@@ -53,7 +53,21 @@ made in code); a shared library between the clients (they're in different langua
 
 ## Tasks
 
-To be planned once the proposal is approved.
+Each task leaves the game working, and is one commit with its tests and its words in the three
+languages.
+
+- [ ] T1 — nearness to the edge and the nearest face of its grid, pure · `game/edge.ts` · R2 · tests: `nearness is 0 inside the band and 1 on the edge`, `the nearest face is the one under the ship`
+- [ ] T2 — the force field: the nearest face filled in, as opaque as the ship is near · `game/edge.ts`, `game/world.ts` · R2 · seen flying to the edge
+- [ ] T3 — the camera draws back near the edge · `game/Game.ts` (`updateCamera`) · R4 · seen
+- [ ] T4 — the autopilot: when to take the helm, how to steer back, when to give it back; controls and guns set aside meanwhile · `game/autopilot.ts`, `game/Game.ts` · R5 · tests: `heading out near the edge turns the ship back`, `heading in leaves the controls alone`
+- [ ] T5 — the copilot: a robot in SVG with a speech bubble, warning near the edge and while it steers · `game/copilot.ts`, `game/hud.ts`, `game/game.css`, `i18n/*` · R5, R8 · seen in the three languages
+- [ ] T6 — the camera's shake, fading, after a crash into the edge or a hit · `game/shake.ts`, `game/Game.ts` · R3, R6 · test: `the shake fades to nothing`
+- [ ] T7 — crashing into the edge: the struck face flashes, the shock wave spreads, sparks · `game/edge.ts`, `game/effects.ts` · R3 · test: `the wave spreads fast then slows`; seen
+- [ ] T8 — a hit flashes the screen's edge red · `game/hud.ts`, `game/game.css` · R6 · seen
+- [ ] T9 — sound: the effects made in code with Web Audio, played on shots, hits, explosions, the force field and menu clicks; volumes for effects and music in the Play page, remembered · `game/sound.ts`, `game/Game.ts`, `views/GameView.vue`, `i18n/*` · R1, R8 · tests: `every sound stays within range and ends`
+- [ ] T10 — the music and the engine's hum, which follows the speed · `game/sound.ts` · R1 · tests: `the music never ends`, `the engine hums louder at full throttle`
+- [ ] T11 — the hangar: your ships turning on a floating platform with spotlights; arrows, keys and swipes; Play flies the one shown; the list stays a click away · `views/GameView.vue`, `game/hangar.ts`, `i18n/*` · R7, R8 · seen on a computer and a phone
+- [ ] T12 — the frame time on a phone, before and after; CHANGES.md and version 0.7.0 · R9 · numbers written here
 
 ## Result
 

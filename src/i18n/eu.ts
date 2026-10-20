@@ -237,6 +237,9 @@ const eu: Messages = {
 
   game: {
     leave: 'Irten',
+    pause: 'Pausatu',
+    paused: 'Pausan',
+    resume: 'Jarraitu',
     copilotLeaving: 'Borroka-arenatik irteten ari gara, jauna!',
     copilotTakingHelm: 'Lema hartzen dut, jauna. Arenara itzuliko gara!',
     hint: 'Egin klik saguarekin gidatzeko · W/S azeleratu · A/D albo-biraketa · geziak biratu · Zuriunea tiro · Tab markagailua · +/- radarraren irismena',

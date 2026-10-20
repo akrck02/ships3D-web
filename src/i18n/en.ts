@@ -235,6 +235,9 @@ const en = {
 
   game: {
     leave: 'Leave',
+    pause: 'Pause',
+    paused: 'Paused',
+    resume: 'Resume',
     copilotLeaving: "We're leaving the combat arena, sir!",
     copilotTakingHelm: 'Taking the helm, sir. Back to the arena!',
     hint: 'Click to steer with the mouse · W/S throttle · A/D roll · arrows turn · Space fire · Tab scores · +/- radar range',

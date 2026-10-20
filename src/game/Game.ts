@@ -84,6 +84,8 @@ const EDGE_SPARK_COLOUR = 0x8fe3ff
 /** Others' shots and hits, quieter than ours. */
 const OTHER_SHOTS_VOLUME = 0.45
 const OTHER_HITS_VOLUME = 0.6
+/** No stick and no throttle: the ship flies on as it was. */
+const IDLE_CONTROLS = { pitch: 0, yaw: 0, roll: 0, throttle: 0 }
 /** Gap, in CSS pixels, between the radar and the edges of the screen. */
 const RADAR_MARGIN = 16
 /**
@@ -158,6 +160,8 @@ export class Game {
   private edgeHitAt = 0
   private hitAt = 0
   private touchingEdge = false
+  /** The pause menu is open: the ship flies on straight and holds its fire. */
+  private paused = false
   private readonly shakeOffset = new Vector3()
   private readonly radar = new Radar()
 
@@ -219,6 +223,8 @@ export class Game {
       this.root,
       {
         onLeave: () => this.exit(),
+        onPause: () => this.setPaused(true),
+        onResume: () => this.setPaused(false),
         onRespawn: () => this.requestRespawn(),
         onRadarTap: () => this.radar.cycle(),
       },
@@ -244,6 +250,7 @@ export class Game {
     }
     this.flightHint = options.touch ? t.value.game.touchHint : t.value.game.hint
     window.addEventListener('keydown', this.onKeyDown)
+    document.addEventListener('pointerlockchange', this.onPointerLockChange)
     document.addEventListener('visibilitychange', this.onVisibilityChange)
 
     this.resizeObserver = new ResizeObserver(() => this.resize())
@@ -272,6 +279,7 @@ export class Game {
     sound.stop()
     clearTimeout(this.hintTimer)
     window.removeEventListener('keydown', this.onKeyDown)
+    document.removeEventListener('pointerlockchange', this.onPointerLockChange)
     document.removeEventListener('visibilitychange', this.onVisibilityChange)
     this.resizeObserver.disconnect()
     this.connection.close()
@@ -667,18 +675,20 @@ export class Game {
         )
       }
       // Too near the edge and heading out, the copilot takes the helm (and the guns).
-      const controls = this.autopilot.controls(
-        input,
-        this.flight,
-        settings.worldRadius,
-        settings.maxSpeed,
-      )
+      const controls = this.paused
+        ? IDLE_CONTROLS
+        : this.autopilot.controls(input, this.flight, settings.worldRadius, settings.maxSpeed)
       stepFlight(this.flight, controls, settings, dt)
       this.watchEdge(now, settings)
       me.group.position.copy(this.flight.position)
       me.group.quaternion.copy(this.flight.quaternion)
       this.checkCrash(now, settings)
-      if (input.fire && !this.autopilot.steering && now - this.lastFire >= settings.fireCooldownMs)
+      if (
+        input.fire &&
+        !this.paused &&
+        !this.autopilot.steering &&
+        now - this.lastFire >= settings.fireCooldownMs
+      )
         this.fire(now, settings)
       if (now - this.lastStateSent >= 1000 / settings.tickRate) this.sendState(now)
     } else {
@@ -936,6 +946,26 @@ export class Game {
     this.touchingEdge = touching
   }
 
+  /** Opens or closes the pause menu. */
+  private setPaused(paused: boolean): void {
+    if (paused === this.paused) {
+      return
+    }
+    this.paused = paused
+    this.hud.showPause(paused)
+    sound.play(paused ? 'choose' : 'back')
+    if (paused && document.pointerLockElement) {
+      document.exitPointerLock()
+    }
+  }
+
+  /** Letting go of the mouse (Escape, while it steers) opens the pause menu, as on the 3DS's START. */
+  private onPointerLockChange = (): void => {
+    if (!document.pointerLockElement && this.alive && !this.result) {
+      this.setPaused(true)
+    }
+  }
+
   /** What the copilot says now: it warns near the edge, and says so while it has the helm. */
   private copilotWords(settings: Settings): string | null {
     if (!this.alive || this.seat) {
@@ -1056,6 +1086,10 @@ export class Game {
   }
 
   private onKeyDown = (event: KeyboardEvent): void => {
+    if (event.code === 'Escape' || event.code === 'KeyP') {
+      this.setPaused(!this.paused)
+      return
+    }
     if (event.code === 'Enter' && !this.alive && this.settings) {
       if (performance.now() >= this.diedAt + this.settings.respawnDelayMs) this.requestRespawn()
     }

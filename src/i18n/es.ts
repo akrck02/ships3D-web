@@ -237,6 +237,9 @@ const es: Messages = {
 
   game: {
     leave: 'Salir',
+    pause: 'Pausa',
+    paused: 'En pausa',
+    resume: 'Seguir',
     copilotLeaving: '¡Nos estamos saliendo de la arena de combate, señor!',
     copilotTakingHelm: 'Tomo el mando, señor. ¡De vuelta a la arena!',
     hint: 'Haz clic para dirigir con el ratón · W/S acelerar · A/D alabeo · flechas girar · Espacio disparar · Tab marcador · +/- alcance del radar',

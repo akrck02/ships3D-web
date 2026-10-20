@@ -22,6 +22,7 @@ the same game.
 | R7 | **The hangar**: before playing, your ships turn one at a time on a platform floating in space, with sweeping spotlights; arrows, the keyboard or a swipe go through them, and Play flies the one shown. The ship list stays for those who prefer it | Played on a computer and a phone |
 | R8 | Everything in English, Spanish and Basque, as the rest of the site | The three languages checked |
 | R10 | **The pixel-art look** of the 3DS's menus, asked for by Jon: pixel fonts (VT323, Silkscreen, Press Start 2P, under the OFL), the night-blue glass windows with stepped corners and a hard shadow, the sky-blue accent, a star for what is chosen, and the HUD's life as charges with a heart. Across the site and the game's HUD; the ship designer takes the fonts and colours but keeps its controls' sizes | Seen on every page and in the game, on a computer and a phone; keyboard focus still visible; contrast 4.5:1 |
+| R11 | **Playing feels like the 3DS game**, as the author asked: the Play page is a full screen of live 3D space, with pixel-art windows and icons over it; you choose the mode, then the ship in the hangar, then play, with life at the top left and a pause menu (Resume, Settings, Leave) on Escape, P or a button | Played on a computer and a phone, by keyboard alone too |
 | R9 | No new dependencies, and the game's frame rate on a phone stays where it is | `package.json` unchanged; the frame time compared before and after on a phone |
 
 ## Out of scope
@@ -70,9 +71,14 @@ languages.
 - [x] T11 — the hangar: your ships turning on a floating platform with spotlights; arrows, keys and swipes; Play flies the one shown; the list stays a click away · `views/GameView.vue`, `game/hangar.ts`, `i18n/*` · R7, R8 · seen on a computer and a phone
 - [ ] T12 — the frame time on a phone, before and after; CHANGES.md and version 0.7.0 · R9 · numbers written here
 
-- [ ] T13 — the pixel fonts, served by the site with their licences, and the palette and windows of the 3DS's menus on the site's tokens, buttons, fields and panels · `public/fonts/`, `src/style.css` · R10 · seen on every page
-- [ ] T14 — the pages in the new look: the navigation, the Play page and its hangar, login and registration, my ships, the profile, alerts · `src/views/*`, `src/components/*` · R10 · seen on a computer and a phone
-- [ ] T15 — the game's HUD in pixel art: life as charges with a heart, the speed, the scoreboard, the death and round windows, the copilot's box · `src/game/hud.ts`, `src/game/game.css` · R10 · seen in the game
+- [x] T13 — the pixel fonts, served by the site with their licences, and the palette and windows of the 3DS's menus on the site's tokens, buttons, fields and panels · `public/fonts/`, `src/style.css` · R10 · seen on every page
+- [x] T14 — the pages in the new look: the navigation, the Play page and its hangar, login and registration, my ships, the profile, alerts · `src/views/*`, `src/components/*` · R10 · seen on a computer and a phone
+- [x] T15 — the game's HUD in pixel art: life as charges with a heart, the speed, the scoreboard, the death and round windows, the copilot's box · `src/game/hud.ts`, `src/game/game.css` · R10 · seen in the game
+
+- [ ] T16 — the space behind the Play page, live: the hangar's scene full screen, its platform shown only when choosing a ship · `game/hangar.ts`, `views/GameView.vue` · R11 · seen
+- [ ] T17 — choosing the mode: a pixel window with a big icon for each mode, the cursor star, the arrow keys and Enter · `views/GameView.vue`, `components/PixelIcon.vue` · R11, R8 · seen, by keyboard too
+- [ ] T18 — choosing the ship: the hangar full screen, the name at the top, the arrows at the sides, a window below with the name to fly under and Launch; Settings (volumes, steering on a phone) in a window of its own · `views/GameView.vue`, `components/ShipHangar.vue` · R11, R8 · seen on a computer and a phone
+- [ ] T19 — the pause menu: Escape, P or a button opens it; the ship flies on straight and doesn't fire meanwhile; Resume, Settings and Leave · `game/Game.ts`, `game/hud.ts`, `game/game.css` · R11, R8 · seen
 
 ## Result
 

@@ -69,7 +69,8 @@
 
 .hud-feed {
   position: absolute;
-  top: max(0.8rem, env(safe-area-inset-top));
+  /* Below the pause button. */
+  top: calc(max(0.8rem, env(safe-area-inset-top)) + 3.5rem);
   right: max(0.8rem, env(safe-area-inset-right));
   display: flex;
   flex-direction: column;
@@ -534,6 +535,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hud-lifebar.low .hud-lifebar-heart,
   .hud-copilot,
   .hud-copilot-face,
   .hud-copilot-light {
@@ -547,6 +549,7 @@
  */
 .hud-status,
 .hud-feed-line,
+.hud-pause,
 .hud-scoreboard,
 .hud-death,
 .hud-round,
@@ -575,54 +578,61 @@
   font-size: 0.75rem;
 }
 
-/* The heart before the life's charges: drawn in pixels with a clip path. */
-.hud-heart {
-  width: 14px;
-  height: 12px;
-  background: #ff6f91;
-  clip-path: polygon(
-    14% 0,
-    43% 0,
-    50% 17%,
-    57% 0,
-    86% 0,
-    100% 17%,
-    100% 50%,
-    86% 67%,
-    71% 83%,
-    57% 100%,
-    43% 100%,
-    29% 83%,
-    14% 67%,
-    0 50%,
-    0 17%
-  );
+/* The life bar: drawn in the 3DS's pixels (lifeBar.ts), shown twice their size. */
+.hud-lifebar {
+  width: calc(var(--bar-width, 150) * 2px);
+  max-width: 60vw;
+  height: auto;
+  display: block;
 }
-.hud-charges {
-  height: 0.9rem;
-  padding: 2px;
-  border: 2px solid var(--edge);
-  background: var(--panel);
-  box-shadow: 2px 2px 0 var(--shadow);
+.hud-lifebar.low .hud-lifebar-heart {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hud-heart-beat 0.625s steps(1) infinite;
 }
-/* Ten charges: the fill is cut into cells, so the last one shows partly, as on the 3DS. */
-.hud-charges .hud-life-fill {
-  background: repeating-linear-gradient(
-    90deg,
-    #7fe8ff 0,
-    #3d8fe0 calc(10% - 2px),
-    transparent calc(10% - 2px),
-    transparent 10%
-  );
-  background-size: 10rem 100%;
+@keyframes hud-heart-beat {
+  0% {
+    transform: scale(1.2);
+  }
+  30% {
+    transform: scale(1);
+  }
 }
-.hud-charges .hud-life-fill.low {
-  background: repeating-linear-gradient(
-    90deg,
-    #ff9aa8 0,
-    #e0405a calc(10% - 2px),
-    transparent calc(10% - 2px),
-    transparent 10%
-  );
-  background-size: 10rem 100%;
+
+/* The pause button, at the top right, for a finger; Escape and P open the menu too. */
+.hud-pause-button {
+  position: absolute;
+  top: max(0.8rem, env(safe-area-inset-top));
+  right: max(0.8rem, env(safe-area-inset-right));
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.55rem;
+  pointer-events: auto;
+}
+.hud-pause-button svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+.hud-pause {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-width: min(20rem, calc(100% - 2rem));
+  padding: 1.2rem 1.4rem;
+  pointer-events: auto;
+}
+.hud-pause h2 {
+  margin: 0 0 0.3rem;
+  text-align: center;
+}
+.hud-pause-volume {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--muted);
 }

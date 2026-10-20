@@ -1,10 +1,14 @@
 import { t } from '@/i18n'
 
 import { Copilot } from './copilot'
+import { LifeBar } from './lifeBar'
+import { sound } from './sound'
 import './game.css'
 
 export interface HudActions {
   onLeave(): void
+  onPause(): void
+  onResume(): void
   onRespawn(): void
   onRadarTap(): void
 }
@@ -53,7 +57,8 @@ const KILL_FEED_MAX = 5
  */
 export class Hud {
   readonly root: HTMLDivElement
-  private readonly lifeFill: HTMLDivElement
+  private readonly lifeBar: LifeBar
+  private readonly pause: HTMLDivElement
   private readonly speedText: HTMLSpanElement
   private readonly status: HTMLDivElement
   private readonly copilot: Copilot
@@ -92,16 +97,15 @@ export class Hud {
     this.markerLayer = el('div', 'hud-markers', this.root)
 
     const top = el('div', 'hud-top', this.root)
-    const leave = el('button', 'hud-leave', top)
-    leave.textContent = text.leave
-    leave.addEventListener('click', () => actions.onLeave())
-
     const gauges = el('div', 'hud-gauges', top)
     this.gauges = gauges
-    // Life as the 3DS shows it: a heart and a capsule of charges.
-    el('span', 'hud-heart', gauges)
-    const life = el('div', 'hud-life hud-charges', gauges)
-    this.lifeFill = el('div', 'hud-life-fill', life)
+    // Life as the 3DS shows it, at the top left: a heart and a capsule of charges.
+    this.lifeBar = new LifeBar(gauges)
+    const pause = el('button', 'hud-pause-button', this.root)
+    pause.setAttribute('aria-label', text.pause)
+    pause.append(pauseGlyph())
+    pause.addEventListener('click', () => actions.onPause())
+    this.pause = this.pauseMenu(actions)
     this.speedText = el('span', 'hud-speed', gauges)
 
     // Assault: which team we're on, the time left, and the mothership's life.
@@ -165,9 +169,46 @@ export class Hud {
   }
 
   setLife(life: number, max: number): void {
-    const fraction = Math.max(0, Math.min(1, life / max))
-    this.lifeFill.style.width = `${fraction * 100}%`
-    this.lifeFill.classList.toggle('low', fraction <= 0.3)
+    this.lifeBar.update(life, max)
+  }
+
+  /** Shows or hides the pause menu. */
+  showPause(visible: boolean): void {
+    this.pause.hidden = !visible
+    if (visible) {
+      this.pause.querySelector('button')?.focus()
+    }
+  }
+
+  /** The pause menu: back to the game, the sound's volumes, or out of it. */
+  private pauseMenu(actions: HudActions): HTMLDivElement {
+    const text = t.value.game
+    const menu = el('div', 'hud-pause', this.root)
+    menu.setAttribute('role', 'dialog')
+    menu.setAttribute('aria-label', text.paused)
+    el('h2', '', menu).textContent = text.paused
+    const resume = el('button', 'primary', menu)
+    resume.textContent = text.resume
+    resume.addEventListener('click', () => actions.onResume())
+    for (const kind of ['effects', 'music'] as const) {
+      const label = el('label', 'hud-pause-volume', menu)
+      label.append(kind === 'effects' ? t.value.play.effectsVolume : t.value.play.musicVolume)
+      const slider = el('input', '', label)
+      slider.type = 'range'
+      slider.min = '0'
+      slider.max = '1'
+      slider.step = '0.1'
+      slider.value = String(sound.currentVolumes[kind])
+      slider.addEventListener('change', () => {
+        sound.setVolumes({ ...sound.currentVolumes, [kind]: Number(slider.value) })
+        sound.play('move')
+      })
+    }
+    const leave = el('button', 'danger', menu)
+    leave.textContent = text.leave
+    leave.addEventListener('click', () => actions.onLeave())
+    menu.hidden = true
+    return menu
   }
 
   setSpeed(speed: number): void {
@@ -359,4 +400,22 @@ function el<K extends keyof HTMLElementTagNameMap>(
   if (className) node.className = className
   if (parent) parent.appendChild(node)
   return node
+}
+
+/** The pause button's two bars, in SVG. */
+function pauseGlyph(): SVGSVGElement {
+  const namespace = 'http://www.w3.org/2000/svg'
+  const glyph = document.createElementNS(namespace, 'svg')
+  glyph.setAttribute('viewBox', '0 0 12 12')
+  glyph.setAttribute('aria-hidden', 'true')
+  glyph.setAttribute('shape-rendering', 'crispEdges')
+  for (const x of [2, 7]) {
+    const bar = document.createElementNS(namespace, 'rect')
+    bar.setAttribute('x', String(x))
+    bar.setAttribute('y', '1')
+    bar.setAttribute('width', '3')
+    bar.setAttribute('height', '9')
+    glyph.append(bar)
+  }
+  return glyph
 }

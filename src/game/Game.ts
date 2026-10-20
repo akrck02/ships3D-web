@@ -531,7 +531,7 @@ export class Game {
     victim.info.dead = true
     victim.group.visible = false
     if (!document.hidden && this.settings) {
-      this.effects.explosion(victim.group.position, this.settings.shipRadius * 3)
+      this.effects.blast(victim.group.position, this.settings.shipRadius * 3)
       sound.play('explosion')
     }
     this.hud.message(
@@ -943,6 +943,7 @@ export class Game {
       sound.play('shield')
       if (!document.hidden) {
         this.effects.explosion(this.flight.position, settings.shipRadius * 1.5, EDGE_SPARK_COLOUR)
+        this.effects.sparks(this.flight.position, EDGE_SPARK_COLOUR)
       }
     }
     this.touchingEdge = touching

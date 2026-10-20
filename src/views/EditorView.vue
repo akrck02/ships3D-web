@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
+import { uploadModel } from '@/api/models'
 import { getProject, saveProject } from '@/api/projects'
 import { showAlert, showError } from '@/alerts'
 import { AXIS_COLORS, Editor, type GizmoMode, type PartRef } from '@/editor/Editor'
@@ -10,7 +11,7 @@ import { t } from '@/i18n'
 import {
   LIMITS,
   PART_TEXTURES,
-  PART_TYPES,
+  SHAPE_TYPES,
   boundingRadius,
   DEFAULT_LIGHT,
   cloneLayers,
@@ -28,7 +29,9 @@ import {
   type PartTexture,
   type PartType,
   type Project,
+  type ShapeType,
 } from '@/shared/shipModel'
+import { addLoadedModel, modelState, onModelLoaded, parseModel } from '@/shared/models'
 import { onUrlTextureLoaded, textureSwatch, urlTextureState } from '@/shared/textures'
 
 const route = useRoute()
@@ -85,6 +88,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   stopUrlTextureListener()
+  stopModelListener()
   window.removeEventListener('keydown', onKeyDown)
   window.removeEventListener('beforeunload', onBeforeUnload)
   editor?.destroy()
@@ -174,6 +178,12 @@ function refresh() {
   editor?.select(selected.value)
 }
 
+function canAddPart(): boolean {
+  if (partCount.value < LIMITS.parts) return true
+  showAlert('error', t.value.ship.tooManyParts(LIMITS.parts))
+  return false
+}
+
 /** Whether `extra` more lights fit in the ship; tells the user if not. */
 function lightsFit(extra: number): boolean {
   if (lightCount.value + extra <= LIMITS.lights) return true
@@ -181,18 +191,20 @@ function lightsFit(extra: number): boolean {
   return false
 }
 
-function addPart(type: PartType) {
-  if (partCount.value >= LIMITS.parts) {
-    showAlert('error', t.value.ship.tooManyParts(LIMITS.parts))
-    return
-  }
+/** Adds a shape, or with a modelId an imported model, to the active layer. */
+function addPart(type: PartType, modelId?: string) {
+  if (!canAddPart()) return
   if (type === 'light' && !lightsFit(1)) return
   const layer = currentLayer.value
   if (!layer) return
   layer.visible = true
   // A light starts in its own warm white, not in the hull's color.
   const part = newPart(type, currentColor.value)
-  if (type !== 'light') {
+  if (modelId) {
+    part.modelId = modelId
+    // Models are often a whole ship: start them bigger than a shape.
+    part.scale = [MODEL_SIZE, MODEL_SIZE, MODEL_SIZE]
+  } else if (type !== 'light') {
     if (currentTexture.value) part.texture = currentTexture.value
     if (currentTextureUrl.value) part.textureUrl = currentTextureUrl.value
   }
@@ -202,14 +214,48 @@ function addPart(type: PartType) {
   commit()
 }
 
+const MODEL_SIZE = 4
+
+const modelInput = ref<HTMLInputElement | null>(null)
+const importingModel = ref(false)
+
+/**
+ * Imports the chosen .glb file as a part. It is read here first, so a file
+ * the game couldn't draw is refused before it is uploaded, and the part
+ * shows at once instead of downloading the model back.
+ */
+async function importModel(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file || !canAddPart()) return
+  if (file.size > LIMITS.modelMegabytes * 1024 * 1024) {
+    showAlert('error', t.value.editor.modelTooLarge(LIMITS.modelMegabytes))
+    return
+  }
+  importingModel.value = true
+  try {
+    let model
+    try {
+      model = await parseModel(await file.arrayBuffer())
+    } catch {
+      showAlert('error', t.value.editor.modelUnreadable)
+      return
+    }
+    const imported = await uploadModel(file)
+    addLoadedModel(imported._id, model)
+    addPart('model', imported._id)
+  } catch (error) {
+    showError(error, t.value.editor.importModelFailed)
+  } finally {
+    importingModel.value = false
+  }
+}
+
 function duplicateSelected() {
   const ref = selected.value
   const part = selectedPart.value
-  if (!ref || !part) return
-  if (partCount.value >= LIMITS.parts) {
-    showAlert('error', t.value.ship.tooManyParts(LIMITS.parts))
-    return
-  }
+  if (!ref || !part || !canAddPart()) return
   if (isLight(part) && !lightsFit(part.mirror ? 2 : 1)) return
   const copy = clonePart(part)
   copy.position[0] = Math.min(copy.position[0] + 1, LIMITS.coordinate)
@@ -328,7 +374,16 @@ const textureSwatches = computed(() =>
   Object.fromEntries(PART_TEXTURES.map((texture) => [texture, textureSwatch(texture)])),
 )
 
-function setType(type: PartType, select: HTMLSelectElement) {
+// Bumped when a model loads or fails, so its status below updates.
+const modelsSettled = ref(0)
+const stopModelListener = onModelLoaded(() => modelsSettled.value++)
+const selectedModelState = computed(() => {
+  const id = selectedPart.value?.modelId
+  return id && modelsSettled.value >= 0 ? modelState(id) : null
+})
+
+/** Changes a shape into another (a model part has no type to choose). */
+function setType(type: ShapeType, select: HTMLSelectElement) {
   const part = selectedPart.value
   if (!part) return
   if (type === 'light' && !isLight(part) && !lightsFit(part.mirror ? 2 : 1)) {
@@ -596,10 +651,25 @@ function onKeyDown(event: KeyboardEvent) {
       <section>
         <h3>{{ t.editor.addPart }}</h3>
         <div class="add-grid">
-          <button v-for="type in PART_TYPES" :key="type" type="button" @click="addPart(type)">
+          <button v-for="type in SHAPE_TYPES" :key="type" type="button" @click="addPart(type)">
             {{ t.ship.parts[type] }}
           </button>
         </div>
+        <button
+          type="button"
+          class="import"
+          :disabled="importingModel"
+          @click="modelInput?.click()"
+        >
+          {{ importingModel ? t.editor.importingModel : t.editor.importModel }}
+        </button>
+        <input
+          ref="modelInput"
+          type="file"
+          accept=".glb,model/gltf-binary"
+          hidden
+          @change="importModel"
+        />
       </section>
 
       <section v-if="currentLayer">
@@ -611,7 +681,9 @@ function onKeyDown(event: KeyboardEvent) {
             :class="{ active: selected?.layer === activeLayer && selected?.part === i }"
             @click="selectPart({ layer: activeLayer, part: i })"
           >
+            <span v-if="part.type === 'model'" class="swatch model" aria-hidden="true" />
             <span
+              v-else
               class="swatch"
               :class="{ bulb: isLight(part) }"
               :style="{
@@ -636,18 +708,22 @@ function onKeyDown(event: KeyboardEvent) {
     <aside class="panel right">
       <template v-if="selectedPart">
         <h3>{{ t.editor.part }}</h3>
-        <label class="row">
+        <div v-if="selectedPart.type === 'model'" class="row">
+          {{ t.editor.type }}
+          <span>{{ t.editor.model }}</span>
+        </div>
+        <label v-else class="row">
           {{ t.editor.type }}
           <select
             :value="selectedPart.type"
             @change="
               setType(
-                ($event.target as HTMLSelectElement).value as PartType,
+                ($event.target as HTMLSelectElement).value as ShapeType,
                 $event.target as HTMLSelectElement,
               )
             "
           >
-            <option v-for="type in PART_TYPES" :key="type" :value="type">
+            <option v-for="type in SHAPE_TYPES" :key="type" :value="type">
               {{ t.ship.parts[type] }}
             </option>
           </select>
@@ -683,47 +759,11 @@ function onKeyDown(event: KeyboardEvent) {
           />
         </div>
 
-        <label class="row">
-          {{ t.editor.color }}
-          <input
-            type="color"
-            :value="selectedPart.color"
-            @change="setColor(($event.target as HTMLInputElement).value)"
-          />
-        </label>
-        <div class="swatches">
-          <button
-            v-for="color in SWATCHES"
-            :key="color"
-            type="button"
-            class="swatch-button"
-            :style="{ background: color }"
-            :title="color"
-            @click="setColor(color)"
-          />
-        </div>
-
-        <template v-if="isLight(selectedPart)">
-          <label class="row">
-            {{ t.editor.intensity }}
-            <span class="slider">
-              <input
-                type="range"
-                :min="LIMITS.minIntensity"
-                :max="LIMITS.maxIntensity"
-                step="0.1"
-                :value="selectedPart.intensity ?? DEFAULT_LIGHT.intensity"
-                @input="setIntensity($event, false)"
-                @change="setIntensity($event, true)"
-              />
-              <span class="value">{{
-                (selectedPart.intensity ?? DEFAULT_LIGHT.intensity).toFixed(1)
-              }}</span>
-            </span>
-          </label>
-          <p class="muted hint">{{ t.editor.lightHint(lightCount, LIMITS.lights) }}</p>
-        </template>
-        <template v-else>
+        <template v-if="selectedPart.type === 'model'">
+          <p v-if="selectedModelState === 'failed'" class="muted hint">
+            {{ t.editor.modelFailed }}
+          </p>
+          <p v-else class="muted hint">{{ t.editor.modelHint }}</p>
           <label class="row">
             {{ t.editor.opacity }}
             <span class="slider">
@@ -739,50 +779,109 @@ function onKeyDown(event: KeyboardEvent) {
               <span class="value">{{ Math.round((selectedPart.opacity ?? 1) * 100) }}%</span>
             </span>
           </label>
-
-          <div class="row">{{ t.editor.texture }}</div>
-          <div class="textures">
-            <button
-              type="button"
-              class="texture-button"
-              :class="{ active: !selectedPart.texture && !selectedPart.textureUrl }"
-              :style="{ backgroundColor: selectedPart.color }"
-              :title="t.editor.plainTexture"
-              :aria-label="t.editor.plainTexture"
-              @click="setTexture(undefined)"
-            />
-            <button
-              v-for="texture in PART_TEXTURES"
-              :key="texture"
-              type="button"
-              class="texture-button"
-              :class="{ active: selectedPart.texture === texture }"
-              :style="{
-                backgroundColor: selectedPart.color,
-                backgroundImage: `url(${textureSwatches[texture]})`,
-              }"
-              :title="t.ship.textures[texture]"
-              :aria-label="t.ship.textures[texture]"
-              @click="setTexture(texture)"
-            />
-          </div>
+        </template>
+        <template v-else>
           <label class="row">
-            {{ t.editor.imageLink }}
+            {{ t.editor.color }}
             <input
-              type="url"
-              class="texture-url"
-              placeholder="https://…"
-              :maxlength="LIMITS.textureUrl"
-              :value="selectedPart.textureUrl ?? ''"
-              @change="setTextureUrl"
+              type="color"
+              :value="selectedPart.color"
+              @change="setColor(($event.target as HTMLInputElement).value)"
             />
           </label>
-          <p v-if="selectedUrlState === 'failed'" class="muted hint">
-            {{ t.editor.imageFailed }}
-          </p>
-          <p v-else-if="selectedPart.textureUrl" class="muted hint">
-            {{ t.editor.imageHint }}
-          </p>
+          <div class="swatches">
+            <button
+              v-for="color in SWATCHES"
+              :key="color"
+              type="button"
+              class="swatch-button"
+              :style="{ background: color }"
+              :title="color"
+              @click="setColor(color)"
+            />
+          </div>
+
+          <template v-if="isLight(selectedPart)">
+            <label class="row">
+              {{ t.editor.intensity }}
+              <span class="slider">
+                <input
+                  type="range"
+                  :min="LIMITS.minIntensity"
+                  :max="LIMITS.maxIntensity"
+                  step="0.1"
+                  :value="selectedPart.intensity ?? DEFAULT_LIGHT.intensity"
+                  @input="setIntensity($event, false)"
+                  @change="setIntensity($event, true)"
+                />
+                <span class="value">{{
+                  (selectedPart.intensity ?? DEFAULT_LIGHT.intensity).toFixed(1)
+                }}</span>
+              </span>
+            </label>
+            <p class="muted hint">{{ t.editor.lightHint(lightCount, LIMITS.lights) }}</p>
+          </template>
+          <template v-else>
+            <label class="row">
+              {{ t.editor.opacity }}
+              <span class="slider">
+                <input
+                  type="range"
+                  :min="LIMITS.minOpacity"
+                  max="1"
+                  step="0.05"
+                  :value="selectedPart.opacity ?? 1"
+                  @input="setOpacity($event, false)"
+                  @change="setOpacity($event, true)"
+                />
+                <span class="value">{{ Math.round((selectedPart.opacity ?? 1) * 100) }}%</span>
+              </span>
+            </label>
+
+            <div class="row">{{ t.editor.texture }}</div>
+            <div class="textures">
+              <button
+                type="button"
+                class="texture-button"
+                :class="{ active: !selectedPart.texture && !selectedPart.textureUrl }"
+                :style="{ backgroundColor: selectedPart.color }"
+                :title="t.editor.plainTexture"
+                :aria-label="t.editor.plainTexture"
+                @click="setTexture(undefined)"
+              />
+              <button
+                v-for="texture in PART_TEXTURES"
+                :key="texture"
+                type="button"
+                class="texture-button"
+                :class="{ active: selectedPart.texture === texture }"
+                :style="{
+                  backgroundColor: selectedPart.color,
+                  backgroundImage: `url(${textureSwatches[texture]})`,
+                }"
+                :title="t.ship.textures[texture]"
+                :aria-label="t.ship.textures[texture]"
+                @click="setTexture(texture)"
+              />
+            </div>
+            <label class="row">
+              {{ t.editor.imageLink }}
+              <input
+                type="url"
+                class="texture-url"
+                placeholder="https://…"
+                :maxlength="LIMITS.textureUrl"
+                :value="selectedPart.textureUrl ?? ''"
+                @change="setTextureUrl"
+              />
+            </label>
+            <p v-if="selectedUrlState === 'failed'" class="muted hint">
+              {{ t.editor.imageFailed }}
+            </p>
+            <p v-else-if="selectedPart.textureUrl" class="muted hint">
+              {{ t.editor.imageHint }}
+            </p>
+          </template>
         </template>
 
         <label class="row check">
@@ -931,6 +1030,10 @@ button.icon {
   grid-template-columns: 1fr 1fr;
   gap: 0.4rem;
 }
+.import {
+  width: 100%;
+  margin-top: 0.4rem;
+}
 .swatch {
   display: inline-block;
   width: 0.9rem;
@@ -1006,6 +1109,11 @@ button.icon {
 .swatch {
   background-size: cover;
   background-blend-mode: multiply;
+}
+/* A model keeps its own colors: a cube outline instead of a color. */
+.swatch.model {
+  border-color: var(--muted);
+  transform: rotate(45deg) scale(0.8);
 }
 .texture-button {
   aspect-ratio: 1;

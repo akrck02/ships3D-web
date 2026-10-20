@@ -135,7 +135,22 @@ const es: Messages = {
       'La imagen se repite en mosaico y se tiñe con el color: elige blanco para ver sus propios colores.',
     imageLinkRule: (max: number) =>
       `Los enlaces de imagen deben empezar por https:// y tener como máximo ${max} caracteres.`,
+    importModel: 'Importar modelo 3D (.glb)',
+    importingModel: 'Importando…',
+    importModelFailed: 'No se ha podido importar el modelo.',
+    modelTooLarge: (max: number) => `El modelo no puede ocupar más de ${max} MB.`,
+    modelUnreadable:
+      'No se ha podido leer el archivo como modelo 3D. Expórtalo como .glb con todo incrustado y sin compresión Draco ni meshopt.',
+    model: 'Modelo 3D',
+    modelHint:
+      'El modelo se ajusta a la pieza por su lado más largo y conserva sus propios colores y materiales.',
+    modelFailed:
+      'No se ha podido cargar el modelo; la pieza se muestra como el contorno de una caja.',
     mirror: 'Simetría izquierda/derecha',
+    intensity: 'Intensidad',
+    opacity: 'Opacidad',
+    lightHint: (lights: number, max: number) =>
+      `Las luces iluminan con su color las piezas de alrededor. Usadas ${lights} de ${max} luces (una luz con simetría cuenta doble).`,
     duplicate: 'Duplicar',
     delete: 'Eliminar',
     noSelection: 'Ninguna pieza seleccionada',
@@ -172,6 +187,8 @@ const es: Messages = {
       tube: 'Tubo',
       prism: 'Prisma hexagonal',
       frustum: 'Cilindro cónico',
+      model: 'Modelo 3D',
+      light: 'Luz',
     },
     textures: {
       panels: 'Paneles de casco',
@@ -188,6 +205,8 @@ const es: Messages = {
     needsLayer: 'La nave necesita al menos una capa.',
     tooManyLayers: (max: number) => `Una nave no puede tener más de ${max} capas.`,
     tooManyParts: (max: number) => `Una nave no puede tener más de ${max} piezas.`,
+    tooManyLights: (max: number) =>
+      `Una nave no puede tener más de ${max} luces (una luz con simetría cuenta doble).`,
     layerNameTooLong: (max: number) =>
       `Los nombres de las capas no pueden tener más de ${max} caracteres.`,
     layerProblem: (layer: string, problem: string) => `Capa «${layer}»: ${problem}`,
@@ -197,9 +216,15 @@ const es: Messages = {
     textureAndImage: 'una pieza puede tener una textura o una imagen, no las dos.',
     imageLinkRule: (max: number) =>
       `los enlaces de imagen deben empezar por https:// y tener como máximo ${max} caracteres.`,
+    invalidModelId: 'una pieza de modelo 3D necesita un modelo válido.',
+    modelNoTexture: 'un modelo 3D conserva su propio aspecto y no puede tener textura ni imagen.',
+    modelIdOnShape: 'solo las piezas de modelo 3D pueden tener un modelo.',
     positionRange: (max: number) => `las posiciones deben estar entre -${max} y ${max}.`,
     invalidRotation: 'rotación no válida.',
     sizeRange: (min: number, max: number) => `los tamaños deben estar entre ${min} y ${max}.`,
+    intensityRange: (min: number, max: number) =>
+      `la intensidad de las luces debe estar entre ${min} y ${max}.`,
+    opacityRange: (min: number) => `la opacidad debe estar entre el ${min * 100}% y el 100%.`,
   },
 
   play: {

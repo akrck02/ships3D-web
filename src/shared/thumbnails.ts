@@ -9,6 +9,7 @@ import {
   WebGLRenderer,
 } from 'three'
 
+import { modelsVersion } from './models'
 import { buildShip } from './shipMesh'
 import { urlTexturesVersion } from './textures'
 import type { Layer } from './shipModel'
@@ -40,14 +41,16 @@ function setup(): WebGLRenderer {
 /** A PNG data URL of the ship seen from the front-right, above. */
 export function shipThumbnail(layers: Layer[]): string {
   const json = JSON.stringify(layers)
-  // Image textures load in the background: a thumbnail drawn before they
-  // arrived is redrawn once they have (ShipThumbnail asks again).
-  const key = json.includes('"textureUrl"') ? `${urlTexturesVersion()} ${json}` : json
+  // Image textures and models load in the background: a thumbnail drawn
+  // before they arrived is redrawn once they have (ShipThumbnail asks again).
+  let key = json
+  if (json.includes('"textureUrl"')) key = `${urlTexturesVersion()} ${key}`
+  if (json.includes('"modelId"')) key = `${modelsVersion()} ${key}`
   const cached = cache.get(key)
   if (cached) return cached
 
   const r = setup()
-  const ship = buildShip(layers)
+  const ship = buildShip(layers, true)
   scene.add(ship)
 
   const bounds = new Box3().setFromObject(ship)

@@ -135,7 +135,21 @@ const en = {
     imageHint: 'The image is tiled and tinted by the color: pick white to show its own colors.',
     imageLinkRule: (max: number) =>
       `Image links must start with https:// and be at most ${max} characters.`,
+    importModel: 'Import 3D model (.glb)',
+    importingModel: 'Importing…',
+    importModelFailed: 'Could not import the model.',
+    modelTooLarge: (max: number) => `The model can't be larger than ${max} MB.`,
+    modelUnreadable:
+      "The file couldn't be read as a 3D model. Export it as .glb with everything embedded and no Draco or meshopt compression.",
+    model: '3D model',
+    modelHint:
+      'The model is fitted into the part along its longest side and keeps its own colors and materials.',
+    modelFailed: "The model couldn't be loaded; the part shows as a box outline.",
     mirror: 'Mirror left/right',
+    intensity: 'Intensity',
+    opacity: 'Opacity',
+    lightHint: (lights: number, max: number) =>
+      `Lights shine in their color on the parts around them. ${lights} of ${max} lights used (a mirrored light counts twice).`,
     duplicate: 'Duplicate',
     delete: 'Delete',
     noSelection: 'No part selected',
@@ -172,6 +186,8 @@ const en = {
       tube: 'Tube',
       prism: 'Hex prism',
       frustum: 'Tapered cylinder',
+      model: '3D model',
+      light: 'Light',
     } as Record<PartType, string>,
     textures: {
       panels: 'Hull panels',
@@ -188,6 +204,8 @@ const en = {
     needsLayer: 'The ship needs at least one layer.',
     tooManyLayers: (max: number) => `A ship can't have more than ${max} layers.`,
     tooManyParts: (max: number) => `A ship can't have more than ${max} parts.`,
+    tooManyLights: (max: number) =>
+      `A ship can't have more than ${max} lights (a mirrored light counts twice).`,
     layerNameTooLong: (max: number) => `Layer names can't be longer than ${max} characters.`,
     layerProblem: (layer: string, problem: string) => `Layer "${layer}": ${problem}`,
     unknownType: (type: string) => `unknown part type "${type}".`,
@@ -196,9 +214,15 @@ const en = {
     textureAndImage: 'a part can have a texture or an image, not both.',
     imageLinkRule: (max: number) =>
       `image links must start with https:// and be at most ${max} characters.`,
+    invalidModelId: 'a 3D model part needs a valid model.',
+    modelNoTexture: "a 3D model keeps its own look and can't have a texture or an image.",
+    modelIdOnShape: 'only 3D model parts can have a model.',
     positionRange: (max: number) => `positions must be between -${max} and ${max}.`,
     invalidRotation: 'invalid rotation.',
     sizeRange: (min: number, max: number) => `sizes must be between ${min} and ${max}.`,
+    intensityRange: (min: number, max: number) =>
+      `light intensities must be between ${min} and ${max}.`,
+    opacityRange: (min: number) => `opacities must be between ${min * 100}% and 100%.`,
   },
 
   play: {

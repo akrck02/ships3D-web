@@ -5,6 +5,7 @@ import {
   LIMITS,
   PART_TEXTURES,
   boundingRadius,
+  countLights,
   mirroredTransform,
   newPart,
   newProject,
@@ -25,10 +26,63 @@ describe('validateProject', () => {
     expect(validateProject(project())).toEqual([])
   })
 
+  it('accepts a see-through part and a light', () => {
+    const p = project()
+    p.layers[0]!.parts[0]!.opacity = 0.3
+    p.layers[0]!.parts.push(newPart('light'))
+    expect(validateProject(p)).toEqual([])
+  })
+
+  it.each([0, 1.5, NaN])('rejects opacity %s', (opacity) => {
+    const p = project()
+    p.layers[0]!.parts[0]!.opacity = opacity
+    expect(validateProject(p)).toHaveLength(1)
+  })
+
+  it.each([undefined, 0, 11, Infinity])('rejects a light with intensity %s', (intensity) => {
+    const p = project()
+    const light = newPart('light')
+    light.intensity = intensity
+    p.layers[0]!.parts.push(light)
+    expect(validateProject(p)).toHaveLength(1)
+  })
+
+  it('counts a mirrored light twice against the limit of lights', () => {
+    const p = project()
+    const light = { ...newPart('light'), mirror: true }
+    for (let i = 0; i < LIMITS.lights / 2; i++) p.layers[0]!.parts.push(light)
+    expect(countLights(p.layers)).toBe(LIMITS.lights)
+    expect(validateProject(p)).toEqual([])
+    p.layers[0]!.parts.push(newPart('light'))
+    expect(validateProject(p)).toHaveLength(1)
+  })
+
   it('accepts an https image link', () => {
     const p = project()
     p.layers[0]!.parts[0]!.textureUrl = 'https://i.imgur.com/abc123.png?size=2'
     expect(validateProject(p)).toEqual([])
+  })
+
+  it('accepts an imported model', () => {
+    const p = project()
+    p.layers[0]!.parts[0] = { ...newPart('model'), modelId: '0123456789abcdef01234567' }
+    expect(validateProject(p)).toEqual([])
+  })
+
+  it.each([
+    ['without a model', {}],
+    ['with a bad model id', { modelId: 'nope' }],
+    ['with a texture', { modelId: '0123456789abcdef01234567', texture: 'panels' as const }],
+  ])('rejects a model part %s', (_, fields) => {
+    const p = project()
+    p.layers[0]!.parts[0] = { ...newPart('model'), ...fields }
+    expect(validateProject(p)).toHaveLength(1)
+  })
+
+  it('rejects a model on a shape', () => {
+    const p = project()
+    p.layers[0]!.parts[0]!.modelId = '0123456789abcdef01234567'
+    expect(validateProject(p)).toHaveLength(1)
   })
 
   it.each(PART_TEXTURES)('accepts the %s texture', (texture) => {

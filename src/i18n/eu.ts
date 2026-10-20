@@ -211,6 +211,8 @@ const eu: Messages = {
     stick: '🕹 Joysticka',
     tilt: '📱 Okertu',
     launch: 'Abiatu',
+    effectsVolume: 'Efektuak',
+    musicVolume: 'Musika',
     myShips: 'Nire ontziak',
     builtIn: 'Jokoko ontziak',
     loginBefore: '',

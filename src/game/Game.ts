@@ -36,6 +36,7 @@ import {
   type V3,
 } from './protocol'
 import { Radar } from './radar'
+import { sound } from './sound'
 import { TouchInput, type TouchMode } from './touchInput'
 import { aimFrom, aimQuaternion, buildTurret, stepAim, type Aim } from './turret'
 import { World } from './world'
@@ -80,6 +81,9 @@ const EDGE_TOUCH_SHARE = 0.9995
 const HIT_SHAKE_SHARE = 0.45
 /** The sparks of a crash into the edge: the force field's blue. */
 const EDGE_SPARK_COLOUR = 0x8fe3ff
+/** Others' shots and hits, quieter than ours. */
+const OTHER_SHOTS_VOLUME = 0.45
+const OTHER_HITS_VOLUME = 0.6
 /** Gap, in CSS pixels, between the radar and the edges of the screen. */
 const RADAR_MARGIN = 16
 /**
@@ -258,12 +262,14 @@ export class Game {
 
     this.lastFrameTime = performance.now()
     this.frame = requestAnimationFrame(this.loop)
+    sound.playMusic(true)
   }
 
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
     cancelAnimationFrame(this.frame)
+    sound.stop()
     clearTimeout(this.hintTimer)
     window.removeEventListener('keydown', this.onKeyDown)
     document.removeEventListener('visibilitychange', this.onVisibilityChange)
@@ -468,6 +474,7 @@ export class Game {
     // A hidden tab renders nothing, so bullets would only pile up and then
     // all fly at once on return (a lesson from the 2D game).
     if (document.hidden || !this.settings) return
+    sound.play('laser', OTHER_SHOTS_VOLUME)
     const position = new Vector3().fromArray(p)
     const direction = new Vector3().fromArray(d).normalize()
     this.otherBullets.set(id, {
@@ -497,6 +504,7 @@ export class Game {
     const ship = target === this.myId ? this.me : this.remotes.get(target)
     if (!ship) return
     ship.info.life = life
+    sound.play('hit', ship === this.me ? 1 : OTHER_HITS_VOLUME)
     if (ship === this.me) {
       this.hitAt = performance.now() / 1000
       this.hud.flashHit()
@@ -515,6 +523,7 @@ export class Game {
     victim.group.visible = false
     if (!document.hidden && this.settings) {
       this.effects.explosion(victim.group.position, this.settings.shipRadius * 3)
+      sound.play('explosion')
     }
     this.hud.message(
       killer
@@ -677,6 +686,8 @@ export class Game {
       this.hud.showDeath(this.killerName, left)
     }
 
+    const flying = this.alive && !this.seat && !this.result
+    sound.runEngine(flying, Math.abs(this.flight.speed) / settings.maxSpeed)
     this.updateRemotes(dt, now)
     this.updateBullets(dt, now, settings)
     this.effects.update(dt)
@@ -760,6 +771,7 @@ export class Game {
 
   private fire(now: number, settings: Settings): void {
     this.lastFire = now
+    sound.play('laser')
     const direction = FORWARD.clone().applyQuaternion(this.flight.quaternion)
     const position = this.flight.position
       .clone()
@@ -916,6 +928,7 @@ export class Game {
     if (touching && !this.touchingEdge) {
       this.edgeHitAt = now / 1000
       this.forceField?.crash(this.flight.position, this.edgeHitAt)
+      sound.play('shield')
       if (!document.hidden) {
         this.effects.explosion(this.flight.position, settings.shipRadius * 1.5, EDGE_SPARK_COLOUR)
       }

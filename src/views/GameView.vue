@@ -6,6 +6,7 @@ import { listGameShips, type ShipInfo } from '@/api/projects'
 import { showError } from '@/alerts'
 import ShipThumbnail from '@/components/ShipThumbnail.vue'
 import { Game } from '@/game/Game'
+import { sound, type Volumes } from '@/game/sound'
 import { requestTiltPermission } from '@/game/tilt'
 import { locale, t } from '@/i18n'
 import { toggleFullscreen, type TouchMode } from '@/game/touchInput'
@@ -31,6 +32,7 @@ const selectedId = ref('')
 const guestName = ref(readStorage(GUEST_NAME_KEY) ?? '')
 const playing = ref(false)
 const gameContainer = ref<HTMLElement | null>(null)
+const volumes = ref<Volumes>({ ...sound.currentVolumes })
 let game: Game | null = null
 
 const allShips = computed(() => [...own.value, ...defaults.value])
@@ -54,6 +56,9 @@ onBeforeUnmount(() => stop())
 
 async function start() {
   if (!selectedId.value) return
+  // Browsers let a page make sound only from a click or a key: this one.
+  sound.unlock()
+  sound.play('choose')
   writeStorage(SHIP_KEY, selectedId.value)
   writeStorage(MODE_KEY, mode.value)
   if (!session.user) writeStorage(GUEST_NAME_KEY, guestName.value)
@@ -81,6 +86,13 @@ async function start() {
     onExit: stop,
     touch: isTouch ? { mode: touchMode.value, onModeChange: setTouchMode } : undefined,
   })
+}
+
+function setVolume(kind: keyof Volumes, event: Event) {
+  volumes.value = { ...volumes.value, [kind]: Number((event.target as HTMLInputElement).value) }
+  sound.unlock()
+  sound.setVolumes(volumes.value)
+  if (kind === 'effects') sound.play('move')
 }
 
 function setTouchMode(mode: TouchMode) {
@@ -172,6 +184,28 @@ function writeStorage(key: string, value: string) {
           {{ t.play.tilt }}
         </button>
       </div>
+      <label class="volume">
+        {{ t.play.effectsVolume }}
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.1"
+          :value="volumes.effects"
+          @change="setVolume('effects', $event)"
+        />
+      </label>
+      <label class="volume">
+        {{ t.play.musicVolume }}
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.1"
+          :value="volumes.music"
+          @change="setVolume('music', $event)"
+        />
+      </label>
       <button class="primary" type="submit" :disabled="!selectedId">{{ t.play.launch }}</button>
     </form>
 
@@ -232,6 +266,12 @@ function writeStorage(key: string, value: string) {
   align-items: flex-end;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+.volume {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--muted);
 }
 .steer {
   display: flex;

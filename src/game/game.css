@@ -532,3 +532,11 @@
 .hud-marker.other .hud-marker-life {
   display: none;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-copilot,
+  .hud-copilot-face,
+  .hud-copilot-light {
+    animation: none;
+  }
+}

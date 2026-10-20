@@ -210,6 +210,8 @@ const en = {
     stick: '🕹 Stick',
     tilt: '📱 Tilt',
     launch: 'Launch',
+    effectsVolume: 'Effects',
+    musicVolume: 'Music',
     myShips: 'My ships',
     builtIn: 'Built-in ships',
     loginBefore: '',

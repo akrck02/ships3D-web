@@ -211,6 +211,8 @@ const es: Messages = {
     stick: '🕹 Joystick',
     tilt: '📱 Inclinación',
     launch: 'Despegar',
+    effectsVolume: 'Efectos',
+    musicVolume: 'Música',
     myShips: 'Mis naves',
     builtIn: 'Naves incluidas',
     loginBefore: '',

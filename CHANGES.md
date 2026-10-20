@@ -1,5 +1,28 @@
 CHANGES
 =======
+Version 0.7.0 - 2026-10-20
+------------------
+What the Nintendo 3DS version had and the browser didn't, so both feel like
+the same game.
+
+- Sound, made in code with the Web Audio API (no files): shots, yours and
+  others' (quieter), hits, explosions, the force field, menu clicks, a looping
+  chiptune track and the engine's hum, which rises with the speed. Volumes for
+  effects and music on the Play page, remembered in the browser. Browsers only
+  allow sound after a click, so it starts with Launch.
+- The world's edge is a force field: as you near it, the face of its grid
+  nearest you fills in, more and more, and the camera draws back.
+- Running into the edge flashes the struck face, sends a blue shock wave
+  across the field, throws sparks and shakes the camera.
+- The copilot, a little robot, warns that you're leaving the combat arena.
+  Keep heading out and it takes the helm: it turns you back toward the middle,
+  softly, with your controls and guns set aside until you face inward.
+- Being hit flashes the screen's edge red and shakes the camera a little.
+- The hangar: on the Play page your ship turns on a platform floating in
+  space, lit by sweeping spotlights. The arrows, the arrow keys or a swipe go
+  through the ships, Enter launches. The lists of ships stay below it.
+- In English, Spanish and Basque.
+
 Version 0.6.0 - 2026-10-19
 ------------------
 A new game mode: the assault. Pick it, or the free for all as before, at the

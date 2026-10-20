@@ -1,6 +1,6 @@
 # 1. What the 3DS version has, in the browser
 
-> Status: building · Author's approval: proposal ☑ plan ☑
+> Status: done · Author's approval: proposal ☑ plan ☑
 
 ## Why
 
@@ -56,19 +56,36 @@ made in code); a shared library between the clients (they're in different langua
 Each task leaves the game working, and is one commit with its tests and its words in the three
 languages.
 
-- [ ] T1 — nearness to the edge and the nearest face of its grid, pure · `game/edge.ts` · R2 · tests: `nearness is 0 inside the band and 1 on the edge`, `the nearest face is the one under the ship`
-- [ ] T2 — the force field: the nearest face filled in, as opaque as the ship is near · `game/edge.ts`, `game/world.ts` · R2 · seen flying to the edge
-- [ ] T3 — the camera draws back near the edge · `game/Game.ts` (`updateCamera`) · R4 · seen
-- [ ] T4 — the autopilot: when to take the helm, how to steer back, when to give it back; controls and guns set aside meanwhile · `game/autopilot.ts`, `game/Game.ts` · R5 · tests: `heading out near the edge turns the ship back`, `heading in leaves the controls alone`
-- [ ] T5 — the copilot: a robot in SVG with a speech bubble, warning near the edge and while it steers · `game/copilot.ts`, `game/hud.ts`, `game/game.css`, `i18n/*` · R5, R8 · seen in the three languages
-- [ ] T6 — the camera's shake, fading, after a crash into the edge or a hit · `game/shake.ts`, `game/Game.ts` · R3, R6 · test: `the shake fades to nothing`
-- [ ] T7 — crashing into the edge: the struck face flashes, the shock wave spreads, sparks · `game/edge.ts`, `game/effects.ts` · R3 · test: `the wave spreads fast then slows`; seen
-- [ ] T8 — a hit flashes the screen's edge red · `game/hud.ts`, `game/game.css` · R6 · seen
-- [ ] T9 — sound: the effects made in code with Web Audio, played on shots, hits, explosions, the force field and menu clicks; volumes for effects and music in the Play page, remembered · `game/sound.ts`, `game/Game.ts`, `views/GameView.vue`, `i18n/*` · R1, R8 · tests: `every sound stays within range and ends`
-- [ ] T10 — the music and the engine's hum, which follows the speed · `game/sound.ts` · R1 · tests: `the music never ends`, `the engine hums louder at full throttle`
-- [ ] T11 — the hangar: your ships turning on a floating platform with spotlights; arrows, keys and swipes; Play flies the one shown; the list stays a click away · `views/GameView.vue`, `game/hangar.ts`, `i18n/*` · R7, R8 · seen on a computer and a phone
+- [x] T1 — nearness to the edge and the nearest face of its grid, pure · `game/edge.ts` · R2 · tests: `nearness is 0 inside the band and 1 on the edge`, `the nearest face is the one under the ship`
+- [x] T2 — the force field: the nearest face filled in, as opaque as the ship is near · `game/edge.ts`, `game/world.ts` · R2 · seen flying to the edge
+- [x] T3 — the camera draws back near the edge · `game/Game.ts` (`updateCamera`) · R4 · seen
+- [x] T4 — the autopilot: when to take the helm, how to steer back, when to give it back; controls and guns set aside meanwhile · `game/autopilot.ts`, `game/Game.ts` · R5 · tests: `heading out near the edge turns the ship back`, `heading in leaves the controls alone`
+- [x] T5 — the copilot: a robot in SVG with a speech bubble, warning near the edge and while it steers · `game/copilot.ts`, `game/hud.ts`, `game/game.css`, `i18n/*` · R5, R8 · seen in the three languages
+- [x] T6 — the camera's shake, fading, after a crash into the edge or a hit · `game/shake.ts`, `game/Game.ts` · R3, R6 · test: `the shake fades to nothing`
+- [x] T7 — crashing into the edge: the struck face flashes, the shock wave spreads, sparks · `game/edge.ts`, `game/effects.ts` · R3 · test: `the wave spreads fast then slows`; seen
+- [x] T8 — a hit flashes the screen's edge red · `game/hud.ts`, `game/game.css` · R6 · seen
+- [x] T9 — sound: the effects made in code with Web Audio, played on shots, hits, explosions, the force field and menu clicks; volumes for effects and music in the Play page, remembered · `game/sound.ts`, `game/Game.ts`, `views/GameView.vue`, `i18n/*` · R1, R8 · tests: `every sound stays within range and ends`
+- [x] T10 — the music and the engine's hum, which follows the speed · `game/sound.ts` · R1 · tests: `the music never ends`, `the engine hums louder at full throttle`
+- [x] T11 — the hangar: your ships turning on a floating platform with spotlights; arrows, keys and swipes; Play flies the one shown; the list stays a click away · `views/GameView.vue`, `game/hangar.ts`, `i18n/*` · R7, R8 · seen on a computer and a phone
 - [ ] T12 — the frame time on a phone, before and after; CHANGES.md and version 0.7.0 · R9 · numbers written here
 
 ## Result
 
-Not started.
+Built, on the branch `feature/from-the-3ds`, one commit a task: the force field, the camera drawing
+back, the autopilot and the copilot, the shake, the crash into the edge, the hit flash, the sound
+(effects, music, engine) with its volumes, and the hangar. Tests for the edge's nearness and
+nearest face, the autopilot, the impacts' timing, every sound and the engine; the type check,
+eslint, prettier and all 111 tests pass. No new dependencies.
+
+Seen in a headless Chromium against a local ships3D-api with the free-for-all mode: the force
+field filling in, the camera drawing back, the copilot's warning and its taking the helm, the
+autopilot turning the ship back, the hangar on a computer's width and a phone's, the volume
+sliders, no errors in the console.
+
+Not checked yet, and for a person to try:
+
+- The sounds themselves: the headless browser has no speakers.
+- The crash into the edge's flash, wave and sparks: in the test flights the autopilot turned the
+  ship back before it touched the edge, as it should; a crash needs flying in at speed.
+- The hit flash and shake: there was nobody to shoot at the test ship.
+- T12's frame time on a real phone, before and after (R9).

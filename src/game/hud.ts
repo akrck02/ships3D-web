@@ -57,6 +57,7 @@ export class Hud {
   private readonly speedText: HTMLSpanElement
   private readonly status: HTMLDivElement
   private readonly copilot: Copilot
+  private readonly hitFlash: HTMLDivElement
   private readonly feed: HTMLDivElement
   private readonly scoreboard: HTMLDivElement
   private readonly scoreBody: HTMLTableSectionElement
@@ -115,6 +116,7 @@ export class Hud {
 
     this.status = el('div', 'hud-status', this.root)
     this.copilot = new Copilot(this.root)
+    this.hitFlash = el('div', 'hud-hit', this.root)
 
     this.hint = el('div', 'hud-hint', this.root)
     this.hint.textContent = text.hint
@@ -174,6 +176,14 @@ export class Hud {
   setStatus(text: string | null): void {
     this.status.textContent = text ?? ''
     this.status.hidden = text === null
+  }
+
+  /** Flashes the screen's edge red: our ship was hit. */
+  flashHit(): void {
+    // Restarting a CSS animation needs it taken off and a reflow in between.
+    this.hitFlash.classList.remove('hud-hit-on')
+    void this.hitFlash.offsetWidth
+    this.hitFlash.classList.add('hud-hit-on')
   }
 
   /** The copilot's words, or null for silence. */

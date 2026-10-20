@@ -497,7 +497,10 @@ export class Game {
     const ship = target === this.myId ? this.me : this.remotes.get(target)
     if (!ship) return
     ship.info.life = life
-    if (ship === this.me) this.hitAt = performance.now() / 1000
+    if (ship === this.me) {
+      this.hitAt = performance.now() / 1000
+      this.hud.flashHit()
+    }
     if (ship === this.me && this.settings) this.hud.setLife(life, this.settings.maxLife)
     if (!document.hidden) this.effects.explosion(ship.group.position, 1.5, 0xffe082)
   }

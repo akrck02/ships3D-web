@@ -4,6 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { WS_URL } from '@/api/http'
 import { listGameShips, type ShipInfo } from '@/api/projects'
 import { showError } from '@/alerts'
+import ShipHangar from '@/components/ShipHangar.vue'
 import ShipThumbnail from '@/components/ShipThumbnail.vue'
 import { Game } from '@/game/Game'
 import { sound, type Volumes } from '@/game/sound'
@@ -156,6 +157,8 @@ function writeStorage(key: string, value: string) {
         <span class="muted">{{ t.play.assaultText }}</span>
       </button>
     </div>
+
+    <ShipHangar v-if="allShips.length" v-model="selectedId" :ships="allShips" @launch="start" />
 
     <form class="start" @submit.prevent="start">
       <label v-if="!session.user" class="guest">

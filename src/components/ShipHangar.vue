@@ -124,7 +124,8 @@ function onPointerUp(event: PointerEvent) {
 <style scoped>
 .hangar {
   margin-bottom: 1rem;
-  border-radius: 10px;
+  border: 2px solid var(--edge);
+  box-shadow: var(--drop);
   overflow: hidden;
   touch-action: pan-y;
 }
@@ -180,7 +181,9 @@ function onPointerUp(event: PointerEvent) {
   text-shadow: 0 2px 4px rgb(0 0 0 / 0.8);
 }
 .name strong {
+  font-family: var(--heading-font);
   font-size: 1.4rem;
+  letter-spacing: 0.05em;
 }
 .name span {
   color: var(--muted);

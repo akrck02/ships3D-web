@@ -1,6 +1,6 @@
 # 1. What the 3DS version has, in the browser
 
-> Status: done · Author's approval: proposal ☑ plan ☑
+> Status: building · Author's approval: proposal ☑ plan ☑
 
 ## Why
 
@@ -21,11 +21,12 @@ the same game.
 | R6 | **Being hit**: the screen's edge flashes red and the camera shakes a little | Seen when hit |
 | R7 | **The hangar**: before playing, your ships turn one at a time on a platform floating in space, with sweeping spotlights; arrows, the keyboard or a swipe go through them, and Play flies the one shown. The ship list stays for those who prefer it | Played on a computer and a phone |
 | R8 | Everything in English, Spanish and Basque, as the rest of the site | The three languages checked |
+| R10 | **The pixel-art look** of the 3DS's menus, asked for by Jon: pixel fonts (VT323, Silkscreen, Press Start 2P, under the OFL), the night-blue glass windows with stepped corners and a hard shadow, the sky-blue accent, a star for what is chosen, and the HUD's life as charges with a heart. Across the site and the game's HUD; the ship designer takes the fonts and colours but keeps its controls' sizes | Seen on every page and in the game, on a computer and a phone; keyboard focus still visible; contrast 4.5:1 |
 | R9 | No new dependencies, and the game's frame rate on a phone stays where it is | `package.json` unchanged; the frame time compared before and after on a phone |
 
 ## Out of scope
 
-- The 3DS's own things: the two screens, stereoscopic 3D, the pixel-art menus, the C-stick.
+- The 3DS's own things: the two screens, stereoscopic 3D, the C-stick. (The pixel-art look was out at first; Jon asked for it, so it is R10.)
 - Changes to the server: everything here is in the browser. The turn back is the client's own,
   as the 3DS does it; the server already holds the ship inside the world.
 - The assault mode's own screens, which the 3DS doesn't have.
@@ -68,6 +69,10 @@ languages.
 - [x] T10 — the music and the engine's hum, which follows the speed · `game/sound.ts` · R1 · tests: `the music never ends`, `the engine hums louder at full throttle`
 - [x] T11 — the hangar: your ships turning on a floating platform with spotlights; arrows, keys and swipes; Play flies the one shown; the list stays a click away · `views/GameView.vue`, `game/hangar.ts`, `i18n/*` · R7, R8 · seen on a computer and a phone
 - [ ] T12 — the frame time on a phone, before and after; CHANGES.md and version 0.7.0 · R9 · numbers written here
+
+- [ ] T13 — the pixel fonts, served by the site with their licences, and the palette and windows of the 3DS's menus on the site's tokens, buttons, fields and panels · `public/fonts/`, `src/style.css` · R10 · seen on every page
+- [ ] T14 — the pages in the new look: the navigation, the Play page and its hangar, login and registration, my ships, the profile, alerts · `src/views/*`, `src/components/*` · R10 · seen on a computer and a phone
+- [ ] T15 — the game's HUD in pixel art: life as charges with a heart, the speed, the scoreboard, the death and round windows, the copilot's box · `src/game/hud.ts`, `src/game/game.css` · R10 · seen in the game
 
 ## Result
 

@@ -293,6 +293,12 @@ function writeStorage(key: string, value: string) {
   gap: 0.3rem;
   padding: 0.7rem 0.9rem;
   text-align: left;
+  font-family: var(--text-font);
+  font-size: 1.05rem;
+}
+.mode strong {
+  font-family: var(--heading-font);
+  font-size: 0.95rem;
 }
 .mode.active {
   border-color: var(--accent);
@@ -317,15 +323,29 @@ function writeStorage(key: string, value: string) {
   gap: 0.8rem;
 }
 .ship {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.5rem;
   text-align: center;
   overflow-wrap: anywhere;
+  font-family: var(--text-font);
+  font-size: 1.05rem;
 }
 .ship.selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent);
+}
+/* The chosen ship gets the 3DS's cursor: a little four-pointed star. */
+.ship.selected::before {
+  content: '';
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
 }
 </style>

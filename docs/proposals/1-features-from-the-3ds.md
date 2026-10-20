@@ -1,6 +1,6 @@
 # 1. What the 3DS version has, in the browser
 
-> Status: planned · Author's approval: proposal ☑ plan ☐
+> Status: building · Author's approval: proposal ☑ plan ☑
 
 ## Why
 

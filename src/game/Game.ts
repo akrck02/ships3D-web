@@ -15,6 +15,7 @@ import { Effects } from './effects'
 import { FORWARD, UP, segmentHitsSphere, stepFlight, velocityOf, type FlightState } from './flight'
 import { Hud, type Marker, type ScoreRow } from './hud'
 import { Hull } from './hull'
+import { ForceField } from './forceField'
 import { CombinedInput, KeyboardMouseInput, type InputSource, type InputState } from './input'
 import { Connection } from './net'
 import {
@@ -134,6 +135,7 @@ export class Game {
   private readonly effects: Effects
   private readonly resizeObserver: ResizeObserver
   private world: World | null = null
+  private forceField: ForceField | null = null
   private readonly radar = new Radar()
 
   private settings: Settings | null = null
@@ -253,6 +255,7 @@ export class Game {
     this.effects.dispose()
     this.radar.dispose()
     this.world?.dispose()
+    this.forceField?.dispose()
     // The mothership's and turrets' meshes are shared like ship parts.
     // Ship meshes share geometries and materials owned by shipMesh.ts,
     // which must outlive this game: only the renderer's GPU copies go.
@@ -306,6 +309,7 @@ export class Game {
     this.settings = settings
     this.myId = id
     this.world ??= new World(this.scene, settings.worldRadius)
+    this.forceField ??= new ForceField(this.scene, settings.worldRadius)
     for (const player of players) {
       if (player.id === id) {
         this.me = this.createShip(player)
@@ -648,6 +652,7 @@ export class Game {
     // below were projected with last frame's camera.
     this.camera.updateMatrixWorld()
     this.world?.update(this.camera.position)
+    this.forceField?.update(this.flight.position)
 
     this.hud.setSpeed(this.flight.speed)
     this.hud.setBoundaryWarning(this.flight.position.length() > settings.worldRadius * 0.92)

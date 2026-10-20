@@ -98,7 +98,9 @@ export class Hud {
 
     const gauges = el('div', 'hud-gauges', top)
     this.gauges = gauges
-    const life = el('div', 'hud-life', gauges)
+    // Life as the 3DS shows it: a heart and a capsule of charges.
+    el('span', 'hud-heart', gauges)
+    const life = el('div', 'hud-life hud-charges', gauges)
     this.lifeFill = el('div', 'hud-life-fill', life)
     this.speedText = el('span', 'hud-speed', gauges)
 

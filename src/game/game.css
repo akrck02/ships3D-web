@@ -540,3 +540,89 @@
     animation: none;
   }
 }
+
+/*
+ * The pixel-art look of the 3DS's menus, on the HUD: windows of night-blue glass
+ * with a light edge and a hard shadow, square corners, the pixel fonts.
+ */
+.hud-status,
+.hud-feed-line,
+.hud-scoreboard,
+.hud-death,
+.hud-round,
+.hud-result,
+.hud-copilot {
+  border: 2px solid var(--edge);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  box-shadow: var(--drop);
+}
+.hud-feed-line {
+  border-width: 1px;
+  box-shadow: none;
+}
+.hud-scoreboard h2,
+.hud-death h2,
+.hud-result h2,
+.hud-status {
+  font-family: var(--heading-font);
+  letter-spacing: 0.04em;
+}
+.hud-speed,
+.hud-round-time,
+.hud-radar-label {
+  font-family: var(--label-font);
+  font-size: 0.75rem;
+}
+
+/* The heart before the life's charges: drawn in pixels with a clip path. */
+.hud-heart {
+  width: 14px;
+  height: 12px;
+  background: #ff6f91;
+  clip-path: polygon(
+    14% 0,
+    43% 0,
+    50% 17%,
+    57% 0,
+    86% 0,
+    100% 17%,
+    100% 50%,
+    86% 67%,
+    71% 83%,
+    57% 100%,
+    43% 100%,
+    29% 83%,
+    14% 67%,
+    0 50%,
+    0 17%
+  );
+}
+.hud-charges {
+  height: 0.9rem;
+  padding: 2px;
+  border: 2px solid var(--edge);
+  background: var(--panel);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+/* Ten charges: the fill is cut into cells, so the last one shows partly, as on the 3DS. */
+.hud-charges .hud-life-fill {
+  background: repeating-linear-gradient(
+    90deg,
+    #7fe8ff 0,
+    #3d8fe0 calc(10% - 2px),
+    transparent calc(10% - 2px),
+    transparent 10%
+  );
+  background-size: 10rem 100%;
+}
+.hud-charges .hud-life-fill.low {
+  background: repeating-linear-gradient(
+    90deg,
+    #ff9aa8 0,
+    #e0405a calc(10% - 2px),
+    transparent calc(10% - 2px),
+    transparent 10%
+  );
+  background-size: 10rem 100%;
+}

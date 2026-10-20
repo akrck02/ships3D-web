@@ -626,9 +626,24 @@
   padding: 1.2rem 1.4rem;
   pointer-events: auto;
 }
+.hud-pause-score {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+}
 .hud-pause h2 {
   margin: 0 0 0.3rem;
   text-align: center;
+}
+.hud-pause-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.hud-pause-switch input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--accent);
 }
 .hud-pause-volume {
   display: flex;

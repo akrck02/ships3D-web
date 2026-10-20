@@ -7,6 +7,7 @@ import { showError } from '@/alerts'
 import PixelIcon from '@/components/PixelIcon.vue'
 import { Game } from '@/game/Game'
 import { Hangar } from '@/game/hangar'
+import { handling, setHandling } from '@/game/handling'
 import { assaultIcon, backIcon, freeForAllIcon, settingsIcon, starIcon } from '@/game/pixelIcons'
 import { sound, type Volumes } from '@/game/sound'
 import { requestTiltPermission } from '@/game/tilt'
@@ -43,6 +44,8 @@ let hangar: Hangar | null = null
 let resizeObserver: ResizeObserver | null = null
 const gameContainer = ref<HTMLElement | null>(null)
 const volumes = ref<Volumes>({ ...sound.currentVolumes })
+const invertPitch = ref(handling.invertPitch)
+const precision = ref(handling.precision)
 let game: Game | null = null
 
 const allShips = computed(() => [...own.value, ...defaults.value])
@@ -236,6 +239,18 @@ function setVolume(kind: keyof Volumes, event: Event) {
   if (kind === 'effects') sound.play('move')
 }
 
+function setInvertPitch(event: Event) {
+  invertPitch.value = (event.target as HTMLInputElement).checked
+  setHandling({ invertPitch: invertPitch.value })
+  sound.play('move')
+}
+
+function setPrecision(event: Event) {
+  precision.value = Number((event.target as HTMLInputElement).value)
+  setHandling({ precision: precision.value })
+  sound.play('move')
+}
+
 function setTouchMode(mode: TouchMode) {
   touchMode.value = mode
   writeStorage(TOUCH_MODE_KEY, mode)
@@ -389,6 +404,14 @@ function writeStorage(key: string, value: string) {
           :value="volumes.music"
           @change="setVolume('music', $event)"
         />
+      </label>
+      <label class="switch">
+        <input type="checkbox" :checked="invertPitch" @change="setInvertPitch" />
+        {{ t.play.invertPitch }}
+      </label>
+      <label class="volume">
+        {{ t.play.fineAim }}
+        <input type="range" min="0" max="1" step="0.1" :value="precision" @change="setPrecision" />
       </label>
       <div v-if="isTouch" class="steer" role="radiogroup" :aria-label="t.play.steerWith">
         <span class="muted">{{ t.play.steerWith }}</span>
@@ -618,6 +641,16 @@ function writeStorage(key: string, value: string) {
   flex-direction: column;
   gap: 0.9rem;
   z-index: 1;
+}
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.switch input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--accent);
 }
 .steer {
   display: flex;

@@ -16,6 +16,7 @@ import { edgeNearness } from './edge'
 import { Effects } from './effects'
 import { FORWARD, UP, segmentHitsSphere, stepFlight, velocityOf, type FlightState } from './flight'
 import { ForceField } from './forceField'
+import { handled, handling } from './handling'
 import { Hud, type Marker, type ScoreRow } from './hud'
 import { Hull } from './hull'
 import { shake } from './impact'
@@ -654,7 +655,8 @@ export class Game {
   }
 
   private update(dt: number, now: number, settings: Settings, me: Ship): void {
-    const input = this.input.read(dt)
+    // The stick shaped by the handling chosen in Settings: fine aim, and which way is up.
+    const input = handled(this.input.read(dt), handling)
 
     if (this.result) {
       // The round is over: nothing more to fly or shoot.
@@ -952,7 +954,7 @@ export class Game {
       return
     }
     this.paused = paused
-    this.hud.showPause(paused)
+    this.hud.showPause(paused, this.me?.info.kills ?? 0, this.me?.info.deaths ?? 0)
     sound.play(paused ? 'choose' : 'back')
     if (paused && document.pointerLockElement) {
       document.exitPointerLock()

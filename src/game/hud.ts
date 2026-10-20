@@ -1,6 +1,7 @@
 import { t } from '@/i18n'
 
 import { Copilot } from './copilot'
+import { handling, setHandling } from './handling'
 import { LifeBar } from './lifeBar'
 import { sound } from './sound'
 import './game.css'
@@ -59,6 +60,7 @@ export class Hud {
   readonly root: HTMLDivElement
   private readonly lifeBar: LifeBar
   private readonly pause: HTMLDivElement
+  private pauseScore!: HTMLParagraphElement
   private readonly speedText: HTMLSpanElement
   private readonly status: HTMLDivElement
   private readonly copilot: Copilot
@@ -172,9 +174,10 @@ export class Hud {
     this.lifeBar.update(life, max)
   }
 
-  /** Shows or hides the pause menu. */
-  showPause(visible: boolean): void {
+  /** Shows or hides the pause menu, with our kills and deaths as the 3DS's PILOT page shows them. */
+  showPause(visible: boolean, kills = 0, deaths = 0): void {
     this.pause.hidden = !visible
+    this.pauseScore.textContent = t.value.game.killsAndDeaths(kills, deaths)
     if (visible) {
       this.pause.querySelector('button')?.focus()
     }
@@ -183,27 +186,28 @@ export class Hud {
   /** The pause menu: back to the game, the sound's volumes, or out of it. */
   private pauseMenu(actions: HudActions): HTMLDivElement {
     const text = t.value.game
+    const play = t.value.play
     const menu = el('div', 'hud-pause', this.root)
     menu.setAttribute('role', 'dialog')
     menu.setAttribute('aria-label', text.paused)
     el('h2', '', menu).textContent = text.paused
+    this.pauseScore = el('p', 'hud-pause-score', menu)
     const resume = el('button', 'primary', menu)
     resume.textContent = text.resume
     resume.addEventListener('click', () => actions.onResume())
     for (const kind of ['effects', 'music'] as const) {
-      const label = el('label', 'hud-pause-volume', menu)
-      label.append(kind === 'effects' ? t.value.play.effectsVolume : t.value.play.musicVolume)
-      const slider = el('input', '', label)
-      slider.type = 'range'
-      slider.min = '0'
-      slider.max = '1'
-      slider.step = '0.1'
-      slider.value = String(sound.currentVolumes[kind])
-      slider.addEventListener('change', () => {
-        sound.setVolumes({ ...sound.currentVolumes, [kind]: Number(slider.value) })
-        sound.play('move')
-      })
+      slider(
+        menu,
+        kind === 'effects' ? play.effectsVolume : play.musicVolume,
+        sound.currentVolumes[kind],
+        (value) => {
+          sound.setVolumes({ ...sound.currentVolumes, [kind]: value })
+          sound.play('move')
+        },
+      )
     }
+    checkbox(menu, play.invertPitch, handling.invertPitch, (on) => setHandling({ invertPitch: on }))
+    slider(menu, play.fineAim, handling.precision, (value) => setHandling({ precision: value }))
     const leave = el('button', 'danger', menu)
     leave.textContent = text.leave
     leave.addEventListener('click', () => actions.onLeave())
@@ -400,6 +404,39 @@ function el<K extends keyof HTMLElementTagNameMap>(
   if (className) node.className = className
   if (parent) parent.appendChild(node)
   return node
+}
+
+/** A labelled slider from 0 to 1, in tenths, that calls back with its value when it changes. */
+function slider(
+  parent: HTMLElement,
+  label: string,
+  value: number,
+  changed: (value: number) => void,
+): void {
+  const holder = el('label', 'hud-pause-volume', parent)
+  holder.append(label)
+  const input = el('input', '', holder)
+  input.type = 'range'
+  input.min = '0'
+  input.max = '1'
+  input.step = '0.1'
+  input.value = String(value)
+  input.addEventListener('change', () => changed(Number(input.value)))
+}
+
+/** A labelled checkbox that calls back when it changes. */
+function checkbox(
+  parent: HTMLElement,
+  label: string,
+  on: boolean,
+  changed: (on: boolean) => void,
+): void {
+  const holder = el('label', 'hud-pause-switch', parent)
+  const input = el('input', '', holder)
+  input.type = 'checkbox'
+  input.checked = on
+  holder.append(label)
+  input.addEventListener('change', () => changed(input.checked))
 }
 
 /** The pause button's two bars, in SVG. */

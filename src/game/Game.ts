@@ -15,6 +15,7 @@ import { Effects } from './effects'
 import { FORWARD, UP, segmentHitsSphere, stepFlight, velocityOf, type FlightState } from './flight'
 import { Hud, type Marker, type ScoreRow } from './hud'
 import { Hull } from './hull'
+import { edgeNearness } from './edge'
 import { ForceField } from './forceField'
 import { CombinedInput, KeyboardMouseInput, type InputSource, type InputState } from './input'
 import { Connection } from './net'
@@ -67,6 +68,8 @@ const MAX_EXTRAPOLATION = 0.5
 const REMOTE_SMOOTHING = 12
 const CAMERA_POSITION_SMOOTHING = 6
 const CAMERA_ROTATION_SMOOTHING = 8
+/** How much farther back the camera sits at the world's edge, in its usual distances. */
+const CAMERA_EDGE_PULL_BACK = 1.6
 /** Gap, in CSS pixels, between the radar and the edges of the screen. */
 const RADAR_MARGIN = 16
 /**
@@ -830,8 +833,11 @@ export class Game {
       this.camera.lookAt(this.cameraEye.copy(this.camera.position).addScaledVector(forward, 100))
       return
     }
+    // Near the world's edge the camera draws back, as if something were wrong.
+    const back =
+      1 + CAMERA_EDGE_PULL_BACK * edgeNearness(this.flight.position, settings.worldRadius)
     this.cameraEye
-      .set(0, r * 1.3, -r * 3.6)
+      .set(0, r * 1.3 * back, -r * 3.6 * back)
       .applyQuaternion(q)
       .add(this.flight.position)
     this.cameraTarget

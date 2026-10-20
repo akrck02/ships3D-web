@@ -18,6 +18,7 @@ import { FORWARD, UP, segmentHitsSphere, stepFlight, velocityOf, type FlightStat
 import { ForceField } from './forceField'
 import { Hud, type Marker, type ScoreRow } from './hud'
 import { Hull } from './hull'
+import { shake } from './impact'
 import { CombinedInput, KeyboardMouseInput, type InputSource, type InputState } from './input'
 import { Connection } from './net'
 import {
@@ -73,6 +74,10 @@ const CAMERA_ROTATION_SMOOTHING = 8
 const CAMERA_EDGE_PULL_BACK = 1.6
 /** How near the edge the copilot warns that we're leaving the arena. */
 const COPILOT_WARNS_AT = 0.35
+/** How close to the world's radius counts as touching its edge. */
+const EDGE_TOUCH_SHARE = 0.9995
+/** How much a hit shakes the camera, as a share of a crash's shake. */
+const HIT_SHAKE_SHARE = 0.45
 /** Gap, in CSS pixels, between the radar and the edges of the screen. */
 const RADAR_MARGIN = 16
 /**
@@ -143,6 +148,11 @@ export class Game {
   private world: World | null = null
   private forceField: ForceField | null = null
   private readonly autopilot = new Autopilot()
+  /** When, in seconds, our ship last ran into the world's edge, and was last hit; 0 before any. */
+  private edgeHitAt = 0
+  private hitAt = 0
+  private touchingEdge = false
+  private readonly shakeOffset = new Vector3()
   private readonly radar = new Radar()
 
   private settings: Settings | null = null
@@ -485,6 +495,7 @@ export class Game {
     const ship = target === this.myId ? this.me : this.remotes.get(target)
     if (!ship) return
     ship.info.life = life
+    if (ship === this.me) this.hitAt = performance.now() / 1000
     if (ship === this.me && this.settings) this.hud.setLife(life, this.settings.maxLife)
     if (!document.hidden) this.effects.explosion(ship.group.position, 1.5, 0xffe082)
   }
@@ -649,6 +660,7 @@ export class Game {
         settings.maxSpeed,
       )
       stepFlight(this.flight, controls, settings, dt)
+      this.watchEdge(now, settings)
       me.group.position.copy(this.flight.position)
       me.group.quaternion.copy(this.flight.quaternion)
       this.checkCrash(now, settings)
@@ -871,6 +883,34 @@ export class Game {
       this.cameraQuaternion,
       1 - Math.exp(-CAMERA_ROTATION_SMOOTHING * dt),
     )
+    this.shakeCamera()
+  }
+
+  /**
+   * Shakes the camera across and up and down, as it sees them, after a crash
+   * into the edge or a hit; a hit less.
+   */
+  private shakeCamera(): void {
+    const now = performance.now() / 1000
+    const crashed = this.edgeHitAt >= this.hitAt
+    const offset = shake(now - (crashed ? this.edgeHitAt : this.hitAt))
+    const strength = crashed ? 1 : HIT_SHAKE_SHARE
+    if (offset.across === 0 && offset.up === 0) {
+      return
+    }
+    this.shakeOffset
+      .set(offset.across * strength, offset.up * strength, 0)
+      .applyQuaternion(this.camera.quaternion)
+    this.camera.position.add(this.shakeOffset)
+  }
+
+  /** Notes when our ship runs into the world's edge anew: the flight model holds it on the edge. */
+  private watchEdge(now: number, settings: Settings): void {
+    const touching = this.flight.position.length() >= settings.worldRadius * EDGE_TOUCH_SHARE
+    if (touching && !this.touchingEdge) {
+      this.edgeHitAt = now / 1000
+    }
+    this.touchingEdge = touching
   }
 
   /** What the copilot says now: it warns near the edge, and says so while it has the helm. */
